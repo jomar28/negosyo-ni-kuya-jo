@@ -195,56 +195,60 @@ function EditTsikotModal({
               />
             </div>
             
-            {/* Date Bought */}
-            <div className='flex flex-col col-span-4 md:col-span-5'>
-              <label className='text-sm font-bold mb-1 text-stone-700'>Date Bought</label>
-              <input
-                type='date'
-                name='date_bought'
-                className={inputStyle}
-                value={editForm.date_bought}
-                onChange={handleChange}
-              />
+            {/* --- NEW: Date Row --- */}
+            <div className='col-span-10 flex justify-between gap-x-2'>
+              {/* Date Bought */}
+              <div className='flex flex-col flex-1'>
+                <label className='text-sm font-bold mb-1 text-stone-700'>Date Bought</label>
+                <input
+                  type='date'
+                  name='date_bought'
+                  className={inputStyle}
+                  value={editForm.date_bought}
+                  onChange={handleChange}
+                />
+              </div>
+              {/* Date Sold */}
+              <div className='flex flex-col flex-1'>
+                <label className='text-sm font-bold mb-1 text-stone-700'>Date Sold (opt)</label>
+                <input
+                  type='date'
+                  name='date_sold'
+                  className={inputStyle}
+                  value={editForm.date_sold}
+                  onChange={handleChange}
+                />
+              </div>
             </div>
 
-            {/* Date Sold (MOVED UP) */}
-            <div className='flex flex-col col-span-4 md:col-span-5 md:col-span-5 md:col-start-1 md:row-start-3'>
-              <label className='text-sm font-bold mb-1 text-stone-700'>Date Sold (opt)</label>
-              <input
-                type='date'
-                name='date_sold'
-                className={inputStyle}
-                value={editForm.date_sold}
-                onChange={handleChange}
-              />
-            </div>
-            
-            {/* Buy Price (MOVED DOWN) */}
-            <div className='flex flex-col col-span-5 md:col-span-5 md:col-start-6 md:row-start-2'>
-              <label className='text-sm font-bold mb-1 text-stone-700'>Buy Price</label>
-              <input
-                type='number'
-                step='0.01'
-                name='buy_price'
-                placeholder='Buy Price'
-                className={`${inputStyle} [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none`}
-                value={editForm.buy_price}
-                onChange={handleChange}
-              />
-            </div>
-            
-            {/* Sell Price */}
-            <div className='flex flex-col col-span-5 md:col-span-5 md:col-start-6 md:row-start-3'>
-              <label className='text-sm font-bold mb-1 text-stone-700'>Sell Price (opt)</label>
-              <input
-                type='number'
-                step='0.01'
-                name='sell_price'
-                placeholder='Sell Price'
-                className={`${inputStyle} [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none`}
-                value={editForm.sell_price}
-                onChange={handleChange}
-              />
+            {/* --- NEW: Price Row --- */}
+            <div className='col-span-10 flex justify-between gap-x-2'>
+              {/* Buy Price */}
+              <div className='flex flex-col flex-1'>
+                <label className='text-sm font-bold mb-1 text-stone-700'>Buy Price</label>
+                <input
+                  type='number'
+                  step='0.01'
+                  name='buy_price'
+                  placeholder='Buy Price'
+                  className={`${inputStyle} [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none`}
+                  value={editForm.buy_price}
+                  onChange={handleChange}
+                />
+              </div>
+              {/* Sell Price */}
+              <div className='flex flex-col flex-1'>
+                <label className='text-sm font-bold mb-1 text-stone-700'>Sell Price (opt)</label>
+                <input
+                  type='number'
+                  step='0.01'
+                  name='sell_price'
+                  placeholder='Sell Price'
+                  className={`${inputStyle} [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none`}
+                  value={editForm.sell_price}
+                  onChange={handleChange}
+                />
+              </div>
             </div>
           </div>
           {/* --- END MODIFIED MAIN FORM --- */}
