@@ -304,7 +304,7 @@ function TsikotView({ tsikots, reload, supabase, formatDate, isBefore }) {
                             />
                         </div>
                         {/* 4. Amount field: 50% on mobile, 20% on desktop */}
-                        <div className='flex flex-col col-span-6 md:col-span-3'>
+                        <div className='flex flex-col col-span-10 md:col-span-3'>
                             <label className='text-xs font-medium mb-1 text-stone-500'>Amount</label>
                             <input
                             type='number'
