@@ -204,7 +204,7 @@ function TsikotView({ tsikots, reload, supabase, formatDate, isBefore }) {
 
             {/* Date Bought */}
             {/* Mobile: Row 2, Col 1-5 | Desktop: Row 2, Col 1-5 */}
-            <div className='flex flex-col col-span-5'>
+            <div className='flex flex-col col-span-4 md:col-span-5'>
                 <label className='text-xs font-medium mb-1 text-stone-500'>Date Bought</label>
                 <input
                 type='date'
@@ -216,7 +216,7 @@ function TsikotView({ tsikots, reload, supabase, formatDate, isBefore }) {
 
             {/* Date Sold (MOVED UP) */}
             {/* Mobile: Row 2, Col 6-10 | Desktop: Row 3, Col 1-5 */}
-            <div className='flex flex-col col-span-5 md:col-start-1 md:row-start-3'>
+            <div className='flex flex-col col-span-4 md:col-span-5 md:col-start-1 md:row-start-3'>
                 <label className='text-xs font-medium mb-1 text-stone-500'>Date Sold (opt)</label>
                 <input
                 type='date'

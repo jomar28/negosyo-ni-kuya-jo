@@ -196,7 +196,7 @@ function EditTsikotModal({
             </div>
             
             {/* Date Bought */}
-            <div className='flex flex-col col-span-5'>
+            <div className='flex flex-col col-span-4 md:col-span-5'>
               <label className='text-sm font-bold mb-1 text-stone-700'>Date Bought</label>
               <input
                 type='date'
@@ -208,7 +208,7 @@ function EditTsikotModal({
             </div>
 
             {/* Date Sold (MOVED UP) */}
-            <div className='flex flex-col col-span-5 md:col-span-5 md:col-start-1 md:row-start-3'>
+            <div className='flex flex-col col-span-4 md:col-span-5 md:col-span-5 md:col-start-1 md:row-start-3'>
               <label className='text-sm font-bold mb-1 text-stone-700'>Date Sold (opt)</label>
               <input
                 type='date'
