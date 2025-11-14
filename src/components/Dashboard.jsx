@@ -228,7 +228,7 @@ function Dashboard({ transactions, tsikots }) {
           </div>
 
           <div>
-            <h4 className='text-lg md:text-xl font-semibold mb-4 text-gray-900'>Billing Periods</h4>
+            <h4 className='text-lg md:text-xl font-semibold mb-4 text-gray-900'>Billings</h4>
             <div className={cardStyle}>
               {totalBillingSummary.length > 0 ? (
                 <div className='space-y-2'>
