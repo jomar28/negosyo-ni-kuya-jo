@@ -133,10 +133,12 @@ function TransactionsView({ transactions, reload }) {
       {isAdmin && (
         <div className='mb-6 p-5 bg-[#F0EFEA] border-2 border-black shadow-sm'>
             <h4 className='font-semibold mb-4 text-gray-900'>Add New Transaction</h4>
-            <div className='grid grid-cols-1 md:grid-cols-6 gap-3'>
+            
+            {/* --- MODIFIED GRID --- */}
+            <div className='grid grid-cols-10 gap-x-2 gap-y-3'>
             
             {/* DATE */}
-            <div className='flex flex-col'>
+            <div className='flex flex-col col-span-4 md:col-span-5'>
                 <label className='text-xs font-medium mb-1 text-stone-500'>Date</label>
                 <input
                 type='date'
@@ -147,7 +149,7 @@ function TransactionsView({ transactions, reload }) {
             </div>
 
             {/* TYPE (Using Custom Select) */}
-            <div className='flex flex-col'>
+            <div className='flex flex-col col-span-10 md:col-span-5'>
                 <label className='text-xs font-medium mb-1 text-stone-500'>Type</label>
                 <CustomSelect 
                   value={form.type}
@@ -157,7 +159,7 @@ function TransactionsView({ transactions, reload }) {
             </div>
 
             {/* AMOUNT */}
-            <div className='flex flex-col'>
+            <div className='flex flex-col col-span-10 md:col-span-5'>
                 <label className='text-xs font-medium mb-1 text-stone-500'>Amount</label>
                 <input
                 type='number'
@@ -170,7 +172,7 @@ function TransactionsView({ transactions, reload }) {
             </div>
 
             {/* GROUP (Using Custom Select) */}
-            <div className='flex flex-col'>
+            <div className='flex flex-col col-span-10 md:col-span-5'>
                 <label className='text-xs font-medium mb-1 text-stone-500'>Group</label>
                 <CustomSelect 
                   value={form.group_name}
@@ -180,7 +182,7 @@ function TransactionsView({ transactions, reload }) {
             </div>
 
             {/* NOTES */}
-            <div className='flex flex-col md:col-span-2'>
+            <div className='flex flex-col col-span-10'>
                 <label className='text-xs font-medium mb-1 text-stone-500'>Notes</label>
                 <input
                 placeholder='Notes'
@@ -190,6 +192,8 @@ function TransactionsView({ transactions, reload }) {
                 />
             </div>
             </div>
+            {/* --- END MODIFIED GRID --- */}
+
 
             <button
             onClick={handleSave}

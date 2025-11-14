@@ -128,7 +128,7 @@ function EditTransactionModal({
             </div>
 
             {/* Type - Using CustomSelect */}
-            <div className='flex flex-col col-span-6 md:col-span-5'>
+            <div className='flex flex-col col-span-10 md:col-span-5'>
               <label className='text-xs font-semibold mb-1.5 text-stone-500 uppercase tracking-wider'>Type</label>
               <CustomSelect 
                 value={editForm.type}
@@ -138,7 +138,7 @@ function EditTransactionModal({
             </div>
 
             {/* Amount */}
-            <div className='flex flex-col col-span-4 md:col-span-5'>
+            <div className='flex flex-col col-span-10 md:col-span-5'>
               <label className='text-xs font-semibold mb-1.5 text-stone-500 uppercase tracking-wider'>Amount</label>
               <input
                 type='number'
@@ -152,7 +152,7 @@ function EditTransactionModal({
             </div>
 
             {/* Group - Using CustomSelect */}
-            <div className='flex flex-col col-span-6 md:col-span-5'>
+            <div className='flex flex-col col-span-10 md:col-span-5'>
               <label className='text-xs font-semibold mb-1.5 text-stone-500 uppercase tracking-wider'>Group</label>
               <CustomSelect 
                 value={editForm.group_name}

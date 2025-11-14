@@ -180,7 +180,9 @@ function EditTsikotModal({
           <h2 className='text-2xl font-bold mb-6 text-stone-800'>Edit Car: {editForm.car}</h2>
 
           {/* --- MODIFIED MAIN FORM GRID --- */}
-          <div className='grid grid-cols-10 gap-4 mb-6 border-b-2 border-black pb-4'>
+          <div className='grid grid-cols-10 gap-y-3 gap-x-2 mb-6 border-b-2 border-black pb-4'>
+            
+            {/* Car Model */}
             <div className='flex flex-col col-span-10'>
               <label className='text-sm font-bold mb-1 text-stone-700'>Car Model</label>
               <input
@@ -192,7 +194,9 @@ function EditTsikotModal({
                 onChange={handleChange}
               />
             </div>
-            <div className='flex flex-col col-span-4 md:col-span-5'>
+            
+            {/* Date Bought */}
+            <div className='flex flex-col col-span-5'>
               <label className='text-sm font-bold mb-1 text-stone-700'>Date Bought</label>
               <input
                 type='date'
@@ -202,7 +206,21 @@ function EditTsikotModal({
                 onChange={handleChange}
               />
             </div>
-            <div className='flex flex-col col-span-6 md:col-span-5'>
+
+            {/* Date Sold (MOVED UP) */}
+            <div className='flex flex-col col-span-5 md:col-span-5 md:col-start-1 md:row-start-3'>
+              <label className='text-sm font-bold mb-1 text-stone-700'>Date Sold (opt)</label>
+              <input
+                type='date'
+                name='date_sold'
+                className={inputStyle}
+                value={editForm.date_sold}
+                onChange={handleChange}
+              />
+            </div>
+            
+            {/* Buy Price (MOVED DOWN) */}
+            <div className='flex flex-col col-span-5 md:col-span-5 md:col-start-6 md:row-start-2'>
               <label className='text-sm font-bold mb-1 text-stone-700'>Buy Price</label>
               <input
                 type='number'
@@ -214,17 +232,9 @@ function EditTsikotModal({
                 onChange={handleChange}
               />
             </div>
-            <div className='flex flex-col col-span-4 md:col-span-5'>
-              <label className='text-sm font-bold mb-1 text-stone-700'>Date Sold (opt)</label>
-              <input
-                type='date'
-                name='date_sold'
-                className={inputStyle}
-                value={editForm.date_sold}
-                onChange={handleChange}
-              />
-            </div>
-            <div className='flex flex-col col-span-6 md:col-span-5'>
+            
+            {/* Sell Price */}
+            <div className='flex flex-col col-span-5 md:col-span-5 md:col-start-6 md:row-start-3'>
               <label className='text-sm font-bold mb-1 text-stone-700'>Sell Price (opt)</label>
               <input
                 type='number'
@@ -281,7 +291,7 @@ function EditTsikotModal({
           <div className='pt-3 mt-3 border-t-2 border-black'>
             <div className='grid grid-cols-10 gap-y-3 gap-x-2 items-end'>
               
-              <div className='flex flex-col col-span-4 md:col-span-3'>
+              <div className='flex flex-col col-span-5 md:col-span-3'>
                 <label className='text-xs font-bold mb-1 text-stone-700 uppercase'>Date</label>
                 <input
                   type='date'
@@ -291,7 +301,7 @@ function EditTsikotModal({
                 />
               </div>
 
-              <div className='flex flex-col col-span-6 md:col-span-2'>
+              <div className='flex flex-col col-span-10 md:col-span-2'>
                 <label className='text-xs font-bold mb-1 text-stone-700 uppercase'>Amount</label>
                 <input
                   type='number'

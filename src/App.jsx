@@ -104,9 +104,9 @@ function MainLayout() {
       </div>
 
       <div className='flex-1 flex flex-col h-screen overflow-hidden'>
-        {/* MODIFIED: Top Bar for Mobile - Added transform classes & sticky */}
+        {/* --- FIX 1: Changed 'sticky' to 'fixed' and 'w-full' --- */}
         <div 
-          className={`md:hidden bg-[#F0EFEA]/90 p-4 flex justify-between items-center z-20 border-b-2 border-black backdrop-blur-sm sticky top-0 transition-transform duration-300 ${
+          className={`md:hidden bg-[#F0EFEA]/90 p-4 flex justify-between items-center z-20 border-b border-stone-300 backdrop-blur-sm fixed top-0 w-full transition-transform duration-300 ${
             isNavVisible ? 'translate-y-0' : '-translate-y-full'
           }`}
         >
@@ -123,11 +123,11 @@ function MainLayout() {
             </button>
         </div>
 
-        {/* MODIFIED: Main Content Area - Added ref and scroll handler */}
+        {/* --- FIX 2: Added 'pt-24' for mobile to offset fixed header --- */}
         <div 
           ref={contentRef}
           onScroll={handleScroll}
-          className='flex-1 overflow-y-auto p-4 pb-32 md:p-8 md:pb-8'
+          className='flex-1 overflow-y-auto p-4 pt-24 pb-32 md:p-8 md:pb-8 md:pt-8'
         >
           {view === 'dashboard' && <Dashboard transactions={transactions} tsikots={tsikots} />}
           {view === 'transactions' && (
@@ -144,14 +144,12 @@ function MainLayout() {
           )}
         </div>
 
-        {/* MODIFIED: Mobile Bottom Navigation Wrapper */}
-        <div 
-          className={`md:hidden fixed bottom-0 left-0 w-full transition-transform duration-300 z-50 ${
-            isNavVisible ? 'translate-y-0' : 'translate-y-full'
-          }`}
-        >
-           <MobileNavbar view={view} setView={setView} />
-        </div>
+        {/* --- FIX 3: Removed wrapper div, passed prop to component --- */}
+         <MobileNavbar 
+            view={view} 
+            setView={setView} 
+            isNavVisible={isNavVisible} 
+          />
       </div>
     </div>
   );

@@ -187,8 +187,10 @@ function TsikotView({ tsikots, reload, supabase, formatDate, isBefore }) {
         <div className='mb-6 p-5 bg-[#F0EFEA] shadow-sm border-2 border-black'>
             <h4 className='font-semibold mb-4 text-stone-700'>Add New Car</h4>
             
-            {/* --- MODIFIED GRID STARTS HERE --- */}
+           {/* --- MODIFIED GRID STARTS HERE --- */}
             <div className='grid grid-cols-10 gap-y-3 gap-x-2'>
+            
+            {/* Car Model (Unchanged) */}
             <div className='flex flex-col col-span-10'>
                 <label className='text-xs font-medium mb-1 text-stone-500'>Car Model</label>
                 <input
@@ -200,7 +202,9 @@ function TsikotView({ tsikots, reload, supabase, formatDate, isBefore }) {
                 />
             </div>
 
-            <div className='flex flex-col col-span-4 md:col-span-5'>
+            {/* Date Bought */}
+            {/* Mobile: Row 2, Col 1-5 | Desktop: Row 2, Col 1-5 */}
+            <div className='flex flex-col col-span-5'>
                 <label className='text-xs font-medium mb-1 text-stone-500'>Date Bought</label>
                 <input
                 type='date'
@@ -210,7 +214,21 @@ function TsikotView({ tsikots, reload, supabase, formatDate, isBefore }) {
                 />
             </div>
 
-            <div className='flex flex-col col-span-6 md:col-span-5'>
+            {/* Date Sold (MOVED UP) */}
+            {/* Mobile: Row 2, Col 6-10 | Desktop: Row 3, Col 1-5 */}
+            <div className='flex flex-col col-span-5 md:col-start-1 md:row-start-3'>
+                <label className='text-xs font-medium mb-1 text-stone-500'>Date Sold (opt)</label>
+                <input
+                type='date'
+                className={inputStyle}
+                value={form.date_sold}
+                onChange={e => setForm({ ...form, date_sold: e.target.value })}
+                />
+            </div>
+
+            {/* Buy Price (MOVED DOWN) */}
+            {/* Mobile: Row 3, Col 1-5 | Desktop: Row 2, Col 6-10 */}
+            <div className='flex flex-col col-span-5 md:col-start-6 md:row-start-2'>
                 <label className='text-xs font-medium mb-1 text-stone-500'>Buy Price</label>
                 <input
                 type='number'
@@ -222,17 +240,9 @@ function TsikotView({ tsikots, reload, supabase, formatDate, isBefore }) {
                 />
             </div>
 
-            <div className='flex flex-col col-span-4 md:col-span-5'>
-                <label className='text-xs font-medium mb-1 text-stone-500'>Date Sold (opt)</label>
-                <input
-                type='date'
-                className={inputStyle}
-                value={form.date_sold}
-                onChange={e => setForm({ ...form, date_sold: e.target.value })}
-                />
-            </div>
-
-            <div className='flex flex-col col-span-6 md:col-span-5'>
+            {/* Sell Price */}
+            {/* Mobile: Row 3, Col 6-10 | Desktop: Row 3, Col 6-10 */}
+            <div className='flex flex-col col-span-5 md:col-start-6 md:row-start-3'>
                 <label className='text-xs font-medium mb-1 text-stone-500'>Sell Price (opt)</label>
                 <input
                 type='number'
@@ -245,7 +255,6 @@ function TsikotView({ tsikots, reload, supabase, formatDate, isBefore }) {
             </div>
             </div>
             {/* --- MODIFIED GRID ENDS HERE --- */}
-
 
             <div className='mt-4'>
             {form.initialMisc.length > 0 && (
