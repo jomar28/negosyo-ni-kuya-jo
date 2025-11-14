@@ -31,7 +31,7 @@ function EditTsikotModal({
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
     };
-  }, [isDirty, onCancel]);
+  }, [isDirty, onCancel, handleAttemptCancel]); // Added handleAttemptCancel to dependency array
 
   function handleChange(e) {
     const { name, value } = e.target;
@@ -179,8 +179,9 @@ function EditTsikotModal({
         <div className='p-6 overflow-y-auto'>
           <h2 className='text-2xl font-bold mb-6 text-stone-800'>Edit Car: {editForm.car}</h2>
 
-          <div className='grid grid-cols-2 md:grid-cols-3 gap-4 mb-6 border-b-2 border-black pb-4'>
-            <div className='flex flex-col'>
+          {/* --- MODIFIED MAIN FORM GRID --- */}
+          <div className='grid grid-cols-10 gap-4 mb-6 border-b-2 border-black pb-4'>
+            <div className='flex flex-col col-span-10'>
               <label className='text-sm font-bold mb-1 text-stone-700'>Car Model</label>
               <input
                 type='text'
@@ -191,7 +192,7 @@ function EditTsikotModal({
                 onChange={handleChange}
               />
             </div>
-            <div className='flex flex-col'>
+            <div className='flex flex-col col-span-4 md:col-span-5'>
               <label className='text-sm font-bold mb-1 text-stone-700'>Date Bought</label>
               <input
                 type='date'
@@ -201,7 +202,7 @@ function EditTsikotModal({
                 onChange={handleChange}
               />
             </div>
-            <div className='flex flex-col'>
+            <div className='flex flex-col col-span-6 md:col-span-5'>
               <label className='text-sm font-bold mb-1 text-stone-700'>Buy Price</label>
               <input
                 type='number'
@@ -213,7 +214,7 @@ function EditTsikotModal({
                 onChange={handleChange}
               />
             </div>
-            <div className='flex flex-col'>
+            <div className='flex flex-col col-span-4 md:col-span-5'>
               <label className='text-sm font-bold mb-1 text-stone-700'>Date Sold (opt)</label>
               <input
                 type='date'
@@ -223,7 +224,7 @@ function EditTsikotModal({
                 onChange={handleChange}
               />
             </div>
-            <div className='flex flex-col'>
+            <div className='flex flex-col col-span-6 md:col-span-5'>
               <label className='text-sm font-bold mb-1 text-stone-700'>Sell Price (opt)</label>
               <input
                 type='number'
@@ -236,6 +237,8 @@ function EditTsikotModal({
               />
             </div>
           </div>
+          {/* --- END MODIFIED MAIN FORM --- */}
+
 
           <h3 className='font-bold mb-3 text-stone-800 uppercase'>Miscellaneous Expenses (tap to edit)</h3>
 
@@ -274,82 +277,88 @@ function EditTsikotModal({
             )}
           </div>
 
-          <div className='bg-[#F0EFEA] p-3 border-2 border-black mt-4 flex flex-col md:flex-row gap-3 md:items-end'>
-            
-            <div className='flex flex-col w-full md:w-36'>
-              <label className='text-xs font-bold mb-1 text-stone-700 uppercase'>Date</label>
-              <input
-                type='date'
-                className={inputStyle}
-                value={newMisc.date}
-                onChange={e => setNewMisc({ ...newMisc, date: e.target.value })}
-              />
-            </div>
+          {/* --- MODIFIED MISC FORM --- */}
+          <div className='pt-3 mt-3 border-t-2 border-black'>
+            <div className='grid grid-cols-10 gap-y-3 gap-x-2 items-end'>
+              
+              <div className='flex flex-col col-span-4 md:col-span-3'>
+                <label className='text-xs font-bold mb-1 text-stone-700 uppercase'>Date</label>
+                <input
+                  type='date'
+                  className={inputStyle}
+                  value={newMisc.date}
+                  onChange={e => setNewMisc({ ...newMisc, date: e.target.value })}
+                />
+              </div>
 
-            <div className='flex flex-col w-full md:w-32'>
-              <label className='text-xs font-bold mb-1 text-stone-700 uppercase'>Amount</label>
-              <input
-                type='number'
-                step='0.01'
-                placeholder='0.00'
-                className={`${inputStyle} [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none`}
-                value={newMisc.amount}
-                onChange={e => setNewMisc({ ...newMisc, amount: e.target.value })}
-              />
-            </div>
+              <div className='flex flex-col col-span-6 md:col-span-2'>
+                <label className='text-xs font-bold mb-1 text-stone-700 uppercase'>Amount</label>
+                <input
+                  type='number'
+                  step='0.01'
+                  placeholder='0.00'
+                  className={`${inputStyle} [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none`}
+                  value={newMisc.amount}
+                  onChange={e => setNewMisc({ ...newMisc, amount: e.target.value })}
+                />
+              </div>
 
-            <div className='flex flex-col w-full md:flex-1'>
-              <label className='text-xs font-bold mb-1 text-stone-700 uppercase'>Notes</label>
-              <input
-                type='text'
-                placeholder='Expense details...'
-                className={inputStyle}
-                value={newMisc.notes}
-                onChange={e => setNewMisc({ ...newMisc, notes: e.target.value })}
-              />
-            </div>
-            
-            <div className='flex gap-2 w-full md:w-auto mt-2 md:mt-0'>
-              <button
-                type='button'
-                onClick={editingMiscIndex !== null ? handleUpdateMisc : handleAddMisc}
-                className={`flex-1 md:flex-none md:w-[38px] h-[38px] text-white flex items-center justify-center transition-colors border-2 border-black rounded-none ${
-                  editingMiscIndex !== null 
-                    ? 'bg-indigo-600 hover:bg-indigo-700' 
-                    : 'bg-green-600 hover:bg-green-700' 
-                }`}
-                title={editingMiscIndex !== null ? "Update Expense" : "Add Expense"}
-              >
-                {editingMiscIndex !== null ? (
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                  </svg>
-                ) : (
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-                  </svg>
-                )}
-                <span className="ml-2 md:hidden font-bold uppercase text-xs">{editingMiscIndex !== null ? 'Update' : 'Add'}</span>
-              </button>
+              <div className='flex flex-col col-span-10 md:col-span-3'>
+                <label className='text-xs font-bold mb-1 text-stone-700 uppercase'>Notes</label>
+                <input
+                  type='text'
+                  placeholder='Expense details...'
+                  className={inputStyle}
+                  value={newMisc.notes}
+                  onChange={e => setNewMisc({ ...newMisc, notes: e.target.value })}
+                />
+              </div>
+              
+              <div className='col-span-10 md:col-span-2'>
+                <div className='flex gap-2 w-full md:w-auto'>
+                  <button
+                    type='button'
+                    onClick={editingMiscIndex !== null ? handleUpdateMisc : handleAddMisc}
+                    className={`flex-1 md:flex-none md:w-[38px] h-[38px] text-white flex items-center justify-center transition-colors border-2 border-black rounded-none ${
+                      editingMiscIndex !== null 
+                        ? 'bg-indigo-600 hover:bg-indigo-700' 
+                        : 'bg-green-600 hover:bg-green-700' 
+                    }`}
+                    title={editingMiscIndex !== null ? "Update Expense" : "Add Expense"}
+                  >
+                    {editingMiscIndex !== null ? (
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                      </svg>
+                    ) : (
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                      </svg>
+                    )}
+                    <span className="ml-2 md:hidden font-bold uppercase text-xs">{editingMiscIndex !== null ? 'Update' : 'Add'}</span>
+                  </button>
 
-              {editingMiscIndex !== null && (
-                <button
-                  type='button'
-                  onClick={() => {
-                    setNewMisc({ date: formatDate(new Date()), amount: '', notes: '' });
-                    setEditingMiscIndex(null);
-                  }}
-                  className='flex-1 md:flex-none md:w-[38px] h-[38px] bg-stone-200 text-stone-600 hover:bg-stone-300 hover:text-rose-600 flex items-center justify-center transition-colors border-2 border-black rounded-none'
-                  title="Cancel Editing"
-                >
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-                  </svg>
-                  <span className="ml-2 md:hidden font-bold uppercase text-xs">Cancel</span>
-                </button>
-              )}
+                  {editingMiscIndex !== null && (
+                    <button
+                      type='button'
+                      onClick={() => {
+                        setNewMisc({ date: formatDate(new Date()), amount: '', notes: '' });
+                        setEditingMiscIndex(null);
+                      }}
+                      className='flex-1 md:flex-none md:w-[38px] h-[38px] bg-stone-200 text-stone-600 hover:bg-stone-300 hover:text-rose-600 flex items-center justify-center transition-colors border-2 border-black rounded-none'
+                      title="Cancel Editing"
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                      </svg>
+                      <span className="ml-2 md:hidden font-bold uppercase text-xs">Cancel</span>
+                    </button>
+                  )}
+                </div>
+              </div>
             </div>
           </div>
+          {/* --- END MODIFIED MISC FORM --- */}
 
         </div>
 

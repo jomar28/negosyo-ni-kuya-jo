@@ -27,7 +27,7 @@ function EditTransactionModal({
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
     };
-  }, [isDirty, onCancel]);
+  }, [isDirty, onCancel, handleAttemptCancel]); // Added handleAttemptCancel to dependency array
 
   // Handle standard inputs (text, date, number)
   function handleChange(e) {
@@ -111,10 +111,12 @@ function EditTransactionModal({
         {/* overflow-y-auto handles the scrolling content */}
         <div className='p-6 overflow-y-auto overflow-x-visible'>
           <h2 className='text-2xl font-bold mb-6 text-stone-800 border-b-2 border-black pb-2'>Edit Transaction</h2>
-          <div className='grid grid-cols-2 gap-4'>
+          
+          {/* --- MODIFIED GRID --- */}
+          <div className='grid grid-cols-10 gap-4'>
             
             {/* Date */}
-            <div className='flex flex-col'>
+            <div className='flex flex-col col-span-4 md:col-span-5'>
               <label className='text-xs font-semibold mb-1.5 text-stone-500 uppercase tracking-wider'>Date</label>
               <input
                 type='date'
@@ -126,7 +128,7 @@ function EditTransactionModal({
             </div>
 
             {/* Type - Using CustomSelect */}
-            <div className='flex flex-col'>
+            <div className='flex flex-col col-span-6 md:col-span-5'>
               <label className='text-xs font-semibold mb-1.5 text-stone-500 uppercase tracking-wider'>Type</label>
               <CustomSelect 
                 value={editForm.type}
@@ -136,7 +138,7 @@ function EditTransactionModal({
             </div>
 
             {/* Amount */}
-            <div className='flex flex-col'>
+            <div className='flex flex-col col-span-4 md:col-span-5'>
               <label className='text-xs font-semibold mb-1.5 text-stone-500 uppercase tracking-wider'>Amount</label>
               <input
                 type='number'
@@ -150,7 +152,7 @@ function EditTransactionModal({
             </div>
 
             {/* Group - Using CustomSelect */}
-            <div className='flex flex-col'>
+            <div className='flex flex-col col-span-6 md:col-span-5'>
               <label className='text-xs font-semibold mb-1.5 text-stone-500 uppercase tracking-wider'>Group</label>
               <CustomSelect 
                 value={editForm.group_name}
@@ -160,7 +162,7 @@ function EditTransactionModal({
             </div>
 
             {/* Notes */}
-            <div className='flex flex-col col-span-2'>
+            <div className='flex flex-col col-span-10'>
               <label className='text-xs font-semibold mb-1.5 text-stone-500 uppercase tracking-wider'>Notes</label>
               <textarea
                 name='notes'
@@ -172,6 +174,7 @@ function EditTransactionModal({
               />
             </div>
           </div>
+          {/* --- END MODIFIED GRID --- */}
         </div>
         
         {/* Footer Actions */}

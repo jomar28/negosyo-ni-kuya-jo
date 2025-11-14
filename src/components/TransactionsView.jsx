@@ -115,7 +115,7 @@ function TransactionsView({ transactions, reload }) {
   const sortedTxs = [...transactions].sort((a, b) => new Date(b.date) - new Date(a.date));
 
   // Standard input style for text/number/date fields
-  const inputStyle = "bg-[#F0EFEA] border-2 border-black rounded-none px-2 h-10 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none w-full";
+  const inputStyle = "bg-[#F0EFEA] border-2 border-black rounded-none px-2 h-10 text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none w-full";
 
   return (
     <div className='max-w-7xl mx-auto'>
@@ -140,7 +140,7 @@ function TransactionsView({ transactions, reload }) {
                 <label className='text-xs font-medium mb-1 text-stone-500'>Date</label>
                 <input
                 type='date'
-                className={inputStyle}
+                className={`${inputStyle}`}
                 value={form.date}
                 onChange={e => setForm({ ...form, date: e.target.value })}
                 />

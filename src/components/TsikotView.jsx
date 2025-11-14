@@ -156,7 +156,7 @@ function TsikotView({ tsikots, reload, supabase, formatDate, isBefore }) {
   const sortedTsikots = [...tsikots].sort((a, b) => new Date(b.date_bought) - new Date(a.date_bought));
 
   // Common Input Style
-  const inputStyle = "bg-[#F0EFEA] border-2 border-black rounded-none px-2 h-10 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none w-full";
+  const inputStyle = "bg-[#F0EFEA] border-2 border-black rounded-none px-2 h-10  text-sm placeholder:text-stone-400 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none w-full";
 
   return (
     <div className='max-w-7xl mx-auto'>
@@ -186,8 +186,10 @@ function TsikotView({ tsikots, reload, supabase, formatDate, isBefore }) {
       {isAdmin && (
         <div className='mb-6 p-5 bg-[#F0EFEA] shadow-sm border-2 border-black'>
             <h4 className='font-semibold mb-4 text-stone-700'>Add New Car</h4>
-            <div className='grid grid-cols-1 md:grid-cols-5 gap-3'>
-            <div className='flex flex-col'>
+            
+            {/* --- MODIFIED GRID STARTS HERE --- */}
+            <div className='grid grid-cols-10 gap-y-3 gap-x-2'>
+            <div className='flex flex-col col-span-10'>
                 <label className='text-xs font-medium mb-1 text-stone-500'>Car Model</label>
                 <input
                 type='text'
@@ -198,7 +200,7 @@ function TsikotView({ tsikots, reload, supabase, formatDate, isBefore }) {
                 />
             </div>
 
-            <div className='flex flex-col'>
+            <div className='flex flex-col col-span-4 md:col-span-5'>
                 <label className='text-xs font-medium mb-1 text-stone-500'>Date Bought</label>
                 <input
                 type='date'
@@ -208,7 +210,7 @@ function TsikotView({ tsikots, reload, supabase, formatDate, isBefore }) {
                 />
             </div>
 
-            <div className='flex flex-col'>
+            <div className='flex flex-col col-span-6 md:col-span-5'>
                 <label className='text-xs font-medium mb-1 text-stone-500'>Buy Price</label>
                 <input
                 type='number'
@@ -220,7 +222,7 @@ function TsikotView({ tsikots, reload, supabase, formatDate, isBefore }) {
                 />
             </div>
 
-            <div className='flex flex-col'>
+            <div className='flex flex-col col-span-4 md:col-span-5'>
                 <label className='text-xs font-medium mb-1 text-stone-500'>Date Sold (opt)</label>
                 <input
                 type='date'
@@ -230,7 +232,7 @@ function TsikotView({ tsikots, reload, supabase, formatDate, isBefore }) {
                 />
             </div>
 
-            <div className='flex flex-col'>
+            <div className='flex flex-col col-span-6 md:col-span-5'>
                 <label className='text-xs font-medium mb-1 text-stone-500'>Sell Price (opt)</label>
                 <input
                 type='number'
@@ -242,6 +244,8 @@ function TsikotView({ tsikots, reload, supabase, formatDate, isBefore }) {
                 />
             </div>
             </div>
+            {/* --- MODIFIED GRID ENDS HERE --- */}
+
 
             <div className='mt-4'>
             {form.initialMisc.length > 0 && (
@@ -276,62 +280,71 @@ function TsikotView({ tsikots, reload, supabase, formatDate, isBefore }) {
             )}
 
             {(form.isAddingMisc || form.initialMisc.length > 0) && (
-                <div className='bg-[#F0EFEA] p-3 border-2 border-black mt-2 flex flex-col md:flex-row gap-3 md:items-end'>
-                    <div className='flex flex-col w-full md:w-36'>
-                        <label className='text-xs font-medium mb-1 text-stone-500'>Date</label>
-                        <input
-                        type='date'
-                        className={inputStyle}
-                        value={form.newMisc.date}
-                        onChange={e => setForm(prev => ({ ...prev, newMisc: { ...prev.newMisc, date: e.target.value } }))}
-                        />
-                    </div>
-                    <div className='flex flex-col w-full md:w-32'>
-                        <label className='text-xs font-medium mb-1 text-stone-500'>Amount</label>
-                        <input
-                        type='number'
-                        step='0.01'
-                        placeholder='0.00'
-                        className={`${inputStyle} [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none`}
-                        value={form.newMisc.amount}
-                        onChange={e => setForm(prev => ({ ...prev, newMisc: { ...prev.newMisc, amount: e.target.value } }))}
-                        />
-                    </div>
-                    <div className='flex flex-col w-full md:flex-1'>
-                        <label className='text-xs font-medium mb-1 text-stone-500'>Notes</label>
-                        <input
-                        type='text'
-                        placeholder='Expense details...'
-                        className={inputStyle}
-                        value={form.newMisc.notes}
-                        onChange={e => setForm(prev => ({ ...prev, newMisc: { ...prev.newMisc, notes: e.target.value } }))}
-                        />
-                    </div>
-                    
-                    {/* Check/X Buttons */}
-                    <div className='flex gap-2 w-full md:w-auto mt-2 md:mt-0'>
-                        <button
-                        type='button'
-                        onClick={handleNewMiscAdd}
-                        className='flex-1 md:flex-none md:w-10 h-10 bg-green-500 text-white hover:bg-green-600 flex items-center justify-center transition-colors border-2 border-black rounded-none'
-                        title="Add"
-                        >
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                            <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-                        </svg>
-                        </button>
-                        {form.isAddingMisc && form.initialMisc.length === 0 && (
-                        <button
-                            type='button'
-                            onClick={() => setForm(prev => ({ ...prev, isAddingMisc: false, newMisc: { date: formatDate(new Date()), amount: '', notes: '' } }))}
-                            className='flex-1 md:flex-none md:w-10 h-10 bg-stone-200 text-stone-600 hover:bg-stone-300 hover:text-rose-600 flex items-center justify-center transition-colors border-2 border-black rounded-none'
-                            title="Cancel"
-                        >
-                            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                            <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-                            </svg>
-                        </button>
-                        )}
+                // 1. Replaced the "box" div with this border-top div
+                <div className='pt-3 mt-3 border-t-2 border-black'>
+                    {/* 2. Added a 10-column grid, aligning items to the end (bottom) */}
+                    <div className='grid grid-cols-10 gap-y-3 gap-x-2 items-end'>
+                        {/* 3. Date field: 50% on mobile, 30% on desktop */}
+                        <div className='flex flex-col col-span-4 md:col-span-3'>
+                            <label className='text-xs font-medium mb-1 text-stone-500'>Date</label>
+                            <input
+                            type='date'
+                            className={inputStyle}
+                            value={form.newMisc.date}
+                            onChange={e => setForm(prev => ({ ...prev, newMisc: { ...prev.newMisc, date: e.target.value } }))}
+                            />
+                        </div>
+                        {/* 4. Amount field: 50% on mobile, 20% on desktop */}
+                        <div className='flex flex-col col-span-6 md:col-span-3'>
+                            <label className='text-xs font-medium mb-1 text-stone-500'>Amount</label>
+                            <input
+                            type='number'
+                            step='0.01'
+                            placeholder='0.00'
+                            className={`${inputStyle} [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none`}
+                            value={form.newMisc.amount}
+                            onChange={e => setForm(prev => ({ ...prev, newMisc: { ...prev.newMisc, amount: e.target.value } }))}
+                            />
+                        </div>
+                        {/* 5. Notes field: 100% on mobile, 30% on desktop */}
+                        <div className='flex flex-col col-span-10 md:col-span-4'>
+                            <label className='text-xs font-medium mb-1 text-stone-500'>Notes</label>
+                            <input
+                            type='text'
+                            placeholder='Expense details...'
+                            className={inputStyle}
+                            value={form.newMisc.notes}
+                            onChange={e => setForm(prev => ({ ...prev, newMisc: { ...prev.newMisc, notes: e.target.value } }))}
+                            />
+                        </div>
+                        
+                        {/* 6. Buttons: 100% on mobile, 20% on desktop */}
+                        <div className='col-span-10 md:col-span-2'>
+                            <div className='flex gap-2 w-full md:w-auto'>
+                                <button
+                                type='button'
+                                onClick={handleNewMiscAdd}
+                                className='flex-1 md:flex-none md:w-10 h-10 bg-green-500 text-white hover:bg-green-600 flex items-center justify-center transition-colors border-2 border-black rounded-none'
+                                title="Add"
+                                >
+                                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                                    <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                                </svg>
+                                </button>
+                                {form.isAddingMisc && form.initialMisc.length === 0 && (
+                                <button
+                                    type='button'
+                                    onClick={() => setForm(prev => ({ ...prev, isAddingMisc: false, newMisc: { date: formatDate(new Date()), amount: '', notes: '' } }))}
+                                    className='flex-1 md:flex-none md:w-10 h-10 bg-stone-200 text-stone-600 hover:bg-stone-300 hover:text-rose-600 flex items-center justify-center transition-colors border-2 border-black rounded-none'
+                                    title="Cancel"
+                                >
+                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                                    <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                                    </svg>
+                                </button>
+                                )}
+                            </div>
+                        </div>
                     </div>
                 </div>
             )}

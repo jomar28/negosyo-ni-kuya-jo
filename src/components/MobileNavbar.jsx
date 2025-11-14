@@ -2,8 +2,8 @@ import React from 'react';
 
 function MobileNavbar({ view, setView }) {
   return (
-    // MODIFIED: Used #F0EFEA for bg to blend with body, added soft shadow
-    <div className="fixed bottom-0 left-0 w-full bg-[#F0EFEA]/95 backdrop-blur-md border-t border-stone-200 shadow-[0_-8px_20px_-5px_rgba(0,0,0,0.1)] z-50 pb-safe">
+    // MODIFIED: Removed fixed, bottom, left, w-full, z-50 classes
+    <div className="bg-[#F0EFEA]/95 backdrop-blur-md border-t border-stone-200 shadow-[0_-8px_20px_-5px_rgba(0,0,0,0.1)] pb-safe">
       <div className="relative flex justify-between items-center px-8 py-2 h-20">
         
         {/* Left Icon: Transactions */}
