@@ -202,59 +202,57 @@ function TsikotView({ tsikots, reload, supabase, formatDate, isBefore }) {
                 />
             </div>
 
-            {/* --- Date Row using FLEX --- */}
-            <div className='col-span-10 flex justify-between gap-x-2'>
-                {/* Date Bought */}
-                <div className='flex flex-col flex-1'>
-                    <label className='text-xs font-medium mb-1 text-stone-500'>Date Bought</label>
-                    <input
-                    type='date'
-                    className={inputStyle}
-                    value={form.date_bought}
-                    onChange={e => setForm({ ...form, date_bought: e.target.value })}
-                    />
-                </div>
-                {/* Date Sold */}
-                <div className='flex flex-col flex-1'>
-                    <label className='text-xs font-medium mb-1 text-stone-500'>Date Sold (opt)</label>
-                    <input
-                    type='date'
-                    className={inputStyle}
-                    value={form.date_sold}
-                    onChange={e => setForm({ ...form, date_sold: e.target.value })}
-                    />
-                </div>
+            {/* Date Bought */}
+            {/* Mobile: Row 2, Col 1-5 | Desktop: Row 2, Col 1-5 */}
+            <div className='flex flex-col col-span-4 md:col-span-5'>
+                <label className='text-xs font-medium mb-1 text-stone-500'>Date Bought</label>
+                <input
+                type='date'
+                className={inputStyle}
+                value={form.date_bought}
+                onChange={e => setForm({ ...form, date_bought: e.target.value })}
+                />
             </div>
-            {/* --- END Date Row --- */}
 
-            {/* --- Price Row using FLEX --- */}
-            <div className='col-span-10 flex justify-between gap-x-2'>
-                {/* Buy Price */}
-                <div className='flex flex-col flex-1'>
-                    <label className='text-xs font-medium mb-1 text-stone-500'>Buy Price</label>
-                    <input
-                    type='number'
-                    step='0.01'
-                    placeholder='Buy Price'
-                    className={`${inputStyle} [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none`}
-                    value={form.buy_price}
-                    onChange={e => setForm({ ...form, buy_price: e.target.value })}
-                    />
-                </div>
-                {/* Sell Price */}
-                <div className='flex flex-col flex-1'>
-                    <label className='text-xs font-medium mb-1 text-stone-500'>Sell Price (opt)</label>
-                    <input
-                    type='number'
-                    step='0.01'
-                    placeholder='Sell Price'
-                    className={`${inputStyle} [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none`}
-                    value={form.sell_price}
-                    onChange={e => setForm({ ...form, sell_price: e.target.value })}
-                    />
-                </div>
+            {/* Date Sold (MOVED UP) */}
+            {/* Mobile: Row 2, Col 6-10 | Desktop: Row 3, Col 1-5 */}
+            <div className='flex flex-col col-span-4 col-start-6 justify-end md:col-span-5 md:col-start-1 md:row-start-3'>
+                <label className='text-xs font-medium mb-1 text-stone-500'>Date Sold (opt)</label>
+                <input
+                type='date'
+                className={inputStyle}
+                value={form.date_sold}
+                onChange={e => setForm({ ...form, date_sold: e.target.value })}
+                />
             </div>
-            {/* --- END Price Row --- */}
+
+            {/* Buy Price (MOVED DOWN) */}
+            {/* Mobile: Row 3, Col 1-5 | Desktop: Row 2, Col 6-10 */}
+            <div className='flex flex-col col-span-5 md:col-start-6 md:row-start-2'>
+                <label className='text-xs font-medium mb-1 text-stone-500'>Buy Price</label>
+                <input
+                type='number'
+                step='0.01'
+                placeholder='Buy Price'
+                className={`${inputStyle} [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none`}
+                value={form.buy_price}
+                onChange={e => setForm({ ...form, buy_price: e.target.value })}
+                />
+            </div>
+
+            {/* Sell Price */}
+            {/* Mobile: Row 3, Col 6-10 | Desktop: Row 3, Col 6-10 */}
+            <div className='flex flex-col col-span-5 md:col-start-6 md:row-start-3'>
+                <label className='text-xs font-medium mb-1 text-stone-500'>Sell Price (opt)</label>
+                <input
+                type='number'
+                step='0.01'
+                placeholder='Sell Price'
+                className={`${inputStyle} [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none`}
+                value={form.sell_price}
+                onChange={e => setForm({ ...form, sell_price: e.target.value })}
+                />
+            </div>
             </div>
             {/* --- MODIFIED GRID ENDS HERE --- */}
 
