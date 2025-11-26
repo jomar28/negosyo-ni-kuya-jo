@@ -14,7 +14,7 @@ export function AuthProvider({ children }) {
   const login = (username, pin) => {
     // UPDATED: Check for both username and pin
     // We'll hardcode 'admin' as the user for now
-    if (username.toLowerCase() === 'admin' && pin === '1234') { 
+    if (username.toLowerCase() === 'jomar' && pin === 'master') { 
       setIsAdmin(true);
       localStorage.setItem('kuyaJoAuth', 'true');
       return true;

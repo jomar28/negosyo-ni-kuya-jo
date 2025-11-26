@@ -225,15 +225,17 @@ function TransactionsView({ transactions, reload }) {
               <tr className='bg-[#F0EFEA] border-b-2 border-black'>
                 {isAdmin && (
                     <th className='p-3 text-center'>
-                    <input
-                        type='checkbox'
-                        checked={selectedIds.length === sortedTxs.length && sortedTxs.length > 0}
-                        onChange={e =>
-                        setSelectedIds(e.target.checked ? sortedTxs.map(t => t.id) : [])
-                        }
-                        aria-label='select all'
-                        className="accent-indigo-600 h-4 w-4"
-                    />
+                    {sortedTxs.length > 0 && (
+                        <input
+                            type='checkbox'
+                            checked={selectedIds.length === sortedTxs.length && sortedTxs.length > 0}
+                            onChange={e =>
+                            setSelectedIds(e.target.checked ? sortedTxs.map(t => t.id) : [])
+                            }
+                            aria-label='select all'
+                            className="accent-indigo-600 h-4 w-4"
+                        />
+                        )}
                     </th>
                 )}
                 <th className='p-3 text-left text-xs md:text-sm font-semibold text-gray-700 uppercase tracking-wider'>Date</th>

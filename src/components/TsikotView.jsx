@@ -376,15 +376,17 @@ function TsikotView({ tsikots, reload, supabase, formatDate, isBefore }) {
               <tr className='bg-[#F0EFEA] border-b-2 border-black'>
                 {isAdmin && (
                     <th className='p-3 text-center'>
-                    <input
-                        type='checkbox'
-                        checked={selectedIds.length === sortedTsikots.length && sortedTsikots.length > 0}
-                        onChange={e =>
-                        setSelectedIds(e.target.checked ? sortedTsikots.map(t => t.id) : [])
-                        }
-                        aria-label='select all'
-                        className="accent-indigo-600 h-4 w-4"
-                    />
+                    {sortedTsikots.length > 0 && (
+                        <input
+                            type='checkbox'
+                            checked={selectedIds.length === sortedTsikots.length && sortedTsikots.length > 0}
+                            onChange={e =>
+                            setSelectedIds(e.target.checked ? sortedTsikots.map(t => t.id) : [])
+                            }
+                            aria-label='select all'
+                            className="accent-indigo-600 h-4 w-4"
+                        />
+                        )}
                     </th>
                 )}
                 <th className='p-3 text-left text-xs md:text-sm font-semibold text-stone-600 uppercase tracking-wider'>Car</th>
