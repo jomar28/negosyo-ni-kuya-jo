@@ -116,7 +116,7 @@ function LoginModal({ isOpen, onClose }) {
             <button
               type='submit'
               disabled={isLoggingIn || !username || !pin}
-              className='px-4 py-2 text-white font-bold uppercase text-xs tracking-wider border-2 border-black transition-all rounded-none bg-indigo-600 hover:bg-indigo-700 disabled:bg-stone-400'
+              className='px-4 py-2 text-white font-bold uppercase text-xs tracking-wider border-2 border-black transition-all rounded-none bg-indigo-600 hover:bg-indigo-700 disabled:bg-stone-300 disabled:text-stone-500 disabled:border-stone-300 disabled:cursor-not-allowed'
             >
               {isLoggingIn ? 'Logging in...' : 'Login'}
             </button>

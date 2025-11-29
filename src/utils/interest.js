@@ -100,35 +100,52 @@ export function getNextBillingDate(fromDate = null) {
  * Generates a day-by-day ledger of balances and interest,
  * correctly applying payments based on bank's priority rules.
  */
-export function generateMasterLedger(transactions, groupName, fromDate, toDate, dailyRate) {
+export function generateMasterLedger(transactions, groupName, fromDate, toDate, rateSchedule = []) {
   const txs = transactions
     .filter(t => t.group_name === groupName)
-    .map(t => ({ ...t, date: formatDate(t.date) })) // Ensure date is standardized
+    .map(t => ({ ...t, date: formatDate(t.date) }))
     .sort((a, b) => new Date(a.date) - new Date(b.date));
 
   let principal = 0;
   let accruedInterest = 0;
   const ledger = [];
   
-  if (!fromDate) return []; // No start date, no ledger
+  if (!fromDate) return []; 
 
   let cursor = new Date(fromDate);
   const endDate = new Date(toDate);
   
-  // ✅ This is the ONLY place we should adjust for timezone, at the start of the loop.
+  // Timezone adjustment
   cursor.setTime(cursor.getTime() + cursor.getTimezoneOffset() * 60 * 1000);
 
   while (cursor <= endDate) {
     const cursorStr = formatDate(cursor);
     
-    // 1. Accrue interest from *yesterday's* principal
+    // --- 1. DETERMINE RATE FOR THIS DAY ---
+    // Find the latest rate that is active on or before today
+    const activeRateConfig = rateSchedule
+        .filter(r => r.effective_date <= cursorStr)
+        .sort((a, b) => new Date(b.effective_date) - new Date(a.effective_date))[0];
+
+    // Default to 14% (0.14) if no schedule is found
+    let currentAnnualRate = activeRateConfig ? Number(activeRateConfig.annual_rate) : 0.14;
+
+    // Apply Jeff's "Half Rate" Logic
+    if (groupName === 'Jeff') {
+        currentAnnualRate = currentAnnualRate / 2;
+    }
+
+    const dailyRate = currentAnnualRate / 360;
+    // --------------------------------------
+
+    // 2. Accrue Interest
     const dailyInterestAdded = principal * dailyRate;
     accruedInterest += dailyInterestAdded;
 
     let principalPaid = 0;
     let interestPaid = 0;
     
-    // 2. Process all transactions for the current day
+    // 3. Process Transactions
     const txsOnThisDay = txs.filter(t => t.date === cursorStr);
 
     for (const tx of txsOnThisDay) {
@@ -136,34 +153,30 @@ export function generateMasterLedger(transactions, groupName, fromDate, toDate, 
         principal += Number(tx.amount);
       }
       
-      // ✅ BANK LOGIC: Simplified to "Payment"
       if (tx.type === 'Payment') {
         let paymentAmount = Number(tx.amount);
 
-        // 1st: Pay down accrued interest
         const paidToInterest = Math.min(paymentAmount, accruedInterest);
         accruedInterest -= paidToInterest;
         interestPaid += paidToInterest;
         paymentAmount -= paidToInterest;
         
-        // 2nd: Remainder pays down principal
         principal -= paymentAmount;
         principalPaid += paymentAmount;
       }
     }
     
-    // 3. Store the state for this day
-    // 🛑 REMOVED all rounding. Store full-precision numbers in the ledger.
+    // 4. Store State
     ledger.push({
       date: cursorStr,
       principal: principal,
       accruedInterest: accruedInterest,
       dailyInterestAdded: dailyInterestAdded,
       principalPaid: principalPaid,
-      interestPaid: interestPaid
+      interestPaid: interestPaid,
+      appliedRate: currentAnnualRate // Added for reference
     });
 
-    // ✅ This now correctly increments the cursor
     cursor = addDays(cursor, 1);
   }
 

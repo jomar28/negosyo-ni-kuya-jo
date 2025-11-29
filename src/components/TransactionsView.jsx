@@ -6,7 +6,7 @@ import ConfirmationModal from './ConfirmationModal';
 import { useAuth } from '../contexts/AuthContext';
 import CustomSelect from './CustomSelect'; // Import the new component
 
-function TransactionsView({ transactions, reload }) {
+function TransactionsView({ transactions, rateSchedule = [], reload }) {
   const { isAdmin } = useAuth();
   const [form, setForm] = useState({
     date: formatDate(new Date()),
@@ -198,7 +198,7 @@ function TransactionsView({ transactions, reload }) {
             <button
             onClick={handleSave}
             disabled={saving || !form.amount}
-            className='mt-4 px-6 py-2 bg-indigo-600 text-white hover:bg-indigo-700 font-medium shadow-sm transition-all rounded-none'
+            className='mt-4 px-6 py-2 bg-indigo-600 text-white hover:bg-indigo-700 font-medium shadow-sm transition-all rounded-none disabled:bg-stone-300 disabled:text-stone-500 disabled:border-stone-300 disabled:cursor-not-allowed'
             >
             {saving ? 'Saving...' : 'Save Transaction'}
             </button>
@@ -242,6 +242,8 @@ function TransactionsView({ transactions, reload }) {
                 <th className='p-3 text-left text-xs md:text-sm font-semibold text-gray-700 uppercase tracking-wider'>Type</th>
                 <th className='p-3 text-right text-xs md:text-sm font-semibold text-gray-700 uppercase tracking-wider'>Amount</th>
                 <th className='p-3 text-left text-xs md:text-sm font-semibold text-gray-700 uppercase tracking-wider'>Group</th>
+                {/* --- ADDED: Rate Column Header --- */}
+                <th className='p-3 text-center text-xs md:text-sm font-semibold text-gray-700 uppercase tracking-wider'>Rate</th>
                 <th className='p-3 text-left text-xs md:text-sm font-semibold text-gray-700 uppercase tracking-wider'>Notes</th>
                 {isAdmin && <th className='p-3 text-center text-xs md:text-sm font-semibold text-gray-700 uppercase tracking-wider'>Action</th>}
               </tr>
@@ -249,6 +251,29 @@ function TransactionsView({ transactions, reload }) {
             <tbody className='divide-y-0'>
               {sortedTxs.map(t => {
                 let displayAmount = t.amount;
+
+                // --- NEW LOGIC: FIND ACTIVE RATE FOR THIS TRANSACTION ---
+                const txDateStr = formatDate(t.date);
+                
+                // 1. Find applicable rate from schedule (latest one on or before txDate)
+                const activeRateConfig = rateSchedule
+                    .filter(r => {
+                        // Ensure rate date is also YYYY-MM-DD string
+                        const rateDateStr = formatDate(r.effective_date);
+                        // Compare strings: e.g. "2025-11-01" <= "2025-11-29"
+                        return rateDateStr <= txDateStr;
+                    })
+                    .sort((a, b) => new Date(b.effective_date) - new Date(a.effective_date))[0];
+                
+                // 2. Default to 14% if none found
+                let activeRate = activeRateConfig ? Number(activeRateConfig.annual_rate) : 0.14;
+                
+                // 3. Adjust for Jeff
+                if (t.group_name === 'Jeff') {
+                    activeRate = activeRate / 2;
+                }
+                // --------------------------------------------------------
+
                 return (
                   <tr key={t.id} className='bg-[#F0EFEA] hover:bg-gray-100 transition-colors' onDoubleClick={() => startEdit(t)}>
                     {isAdmin && (
@@ -284,6 +309,12 @@ function TransactionsView({ transactions, reload }) {
                     <td className='p-3 text-xs md:text-sm text-stone-600'>
                       {t.group_name}
                     </td>
+
+                    {/* --- ADDED: Display Active Rate --- */}
+                    <td className='p-3 text-center text-xs md:text-sm text-stone-500 font-medium'>
+                      {(activeRate * 100).toFixed(2)}%
+                    </td>
+
                     <td className='p-3 text-xs md:text-sm text-stone-500 truncate max-w-[150px]'>
                       {t.notes || '-'}
                     </td>

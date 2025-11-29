@@ -8,62 +8,62 @@ import MobileNavbar from './components/MobileNavbar';
 import Dashboard from './components/Dashboard';
 import TransactionsView from './components/TransactionsView';
 import TsikotView from './components/TsikotView';
-import LoginModal from './components/LoginModal'; // Import the modal
+import LoginModal from './components/LoginModal';
+import RateScheduleView from './components/RateScheduleView'; // Already imported
 
 function MainLayout() {
   const [view, setView] = useState('dashboard');
   const [transactions, setTransactions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [tsikots, setTsikots] = useState([]);
+  const [rateSchedule, setRateSchedule] = useState([]); // Already defined
   
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
   const { isAdmin, logout } = useAuth();
 
-  // NEW: State for hiding nav on scroll
+  // State for hiding nav on scroll
   const [lastScrollY, setLastScrollY] = useState(0);
   const [isNavVisible, setIsNavVisible] = useState(true);
   const contentRef = useRef(null);
 
+  // --- UPDATED: Single function to load ALL data including Rates ---
+  async function loadData() {
+    const txReq = supabase.from('transactions').select('*');
+    const carReq = supabase.from('tsikot').select('*');
+    const rateReq = supabase.from('rate_changes').select('*'); // Fetch rates
 
-  async function loadTsikots() {
-    const { data, error } = await supabase.from('tsikot').select('*');
-    if (error) {
-      console.error('Error loading tsikots:', error);
-      return;
-    }
-    setTsikots(data || []);
-  }
+    const [txRes, carRes, rateRes] = await Promise.all([txReq, carReq, rateReq]);
 
-  async function loadTransactions() {
-    const { data, error } = await supabase.from('transactions').select('*');
-    if (error) {
-      console.error('Error loading transactions:', error);
-      setLoading(false);
-      return;
-    }
-    setTransactions(data || []);
+    if (txRes.error) console.error('Error loading transactions:', txRes.error);
+    if (carRes.error) console.error('Error loading tsikots:', carRes.error);
+    if (rateRes.error) console.error('Error loading rates:', rateRes.error);
+
+    if (txRes.data) setTransactions(txRes.data);
+    if (carRes.data) setTsikots(carRes.data);
+    if (rateRes.data) setRateSchedule(rateRes.data); // Set rates
+
     setLoading(false);
   }
 
   useEffect(() => {
-    loadTransactions();
-    loadTsikots();
+    loadData();
   }, []);
+  // -------------------------------------------------------------
 
   const handleLogin = () => {
     setIsLoginModalOpen(true);
   };
 
-  // NEW: Scroll handler to show/hide nav
+  // Scroll handler to show/hide nav
   const handleScroll = () => {
     if (contentRef.current) {
       const currentScrollY = contentRef.current.scrollTop;
       
       // Hide on scroll down, show on scroll up
-      if (currentScrollY > lastScrollY && currentScrollY > 70) { // 70px threshold
-        setIsNavVisible(false); // Scrolling Down
+      if (currentScrollY > lastScrollY && currentScrollY > 70) { 
+        setIsNavVisible(false); 
       } else {
-        setIsNavVisible(true); // Scrolling Up or at top
+        setIsNavVisible(true); 
       }
       setLastScrollY(currentScrollY);
     }
@@ -104,7 +104,6 @@ function MainLayout() {
       </div>
 
       <div className='flex-1 flex flex-col h-screen overflow-hidden'>
-        {/* --- FIX 1: Changed 'sticky' to 'fixed' and 'w-full' --- */}
         <div 
           className={`md:hidden bg-[#F0EFEA]/90 p-4 flex justify-between items-center z-20 border-b border-stone-300 backdrop-blur-sm fixed top-0 w-full transition-transform duration-300 ${
             isNavVisible ? 'translate-y-0' : '-translate-y-full'
@@ -123,28 +122,43 @@ function MainLayout() {
             </button>
         </div>
 
-        {/* --- FIX 2: Added 'pt-24' for mobile to offset fixed header --- */}
         <div 
           ref={contentRef}
           onScroll={handleScroll}
           className='flex-1 overflow-y-auto p-4 pt-24 pb-32 md:p-8 md:pb-8 md:pt-8'
         >
-          {view === 'dashboard' && <Dashboard transactions={transactions} tsikots={tsikots} />}
-          {view === 'transactions' && (
-            <TransactionsView transactions={transactions} reload={loadTransactions} />
+          {/* UPDATED: Pass rateSchedule to Dashboard */}
+          {view === 'dashboard' && (
+            <Dashboard 
+              transactions={transactions} 
+              tsikots={tsikots} 
+              rateSchedule={rateSchedule} 
+            />
           )}
+
+          {/* UPDATED: Pass rateSchedule to TransactionsView */}
+          {view === 'transactions' && (
+            <TransactionsView 
+              transactions={transactions} 
+              rateSchedule={rateSchedule} 
+              reload={loadData} 
+            />
+          )}
+
           {view === 'tsikots' && (
             <TsikotView
               tsikots={tsikots}
-              reload={loadTsikots}
+              reload={loadData}
               supabase={supabase}
               formatDate={formatDate}
               isBefore={isBefore}
             />
           )}
+
+          {/* ADDED: New View for Rates */}
+          {view === 'rates' && <RateScheduleView onRatesChange={loadData} rateSchedule={rateSchedule}/>}
         </div>
 
-        {/* --- FIX 3: Removed wrapper div, passed prop to component --- */}
          <MobileNavbar 
             view={view} 
             setView={setView} 

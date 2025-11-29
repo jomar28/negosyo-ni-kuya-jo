@@ -10,7 +10,7 @@ import {
 import { calculateMiscTotal, formatCurrency } from '../utils/helpers';
 import TsikotStats from './TsikotStats';
 
-function Dashboard({ transactions, tsikots }) {
+function Dashboard({ transactions, tsikots, rateSchedule = [] }) {
   const groups = Array.from(new Set(transactions.map(t => t.group_name)));
   const today = formatDate(new Date());
   const nextBilling = getNextBillingDate();
@@ -18,10 +18,14 @@ function Dashboard({ transactions, tsikots }) {
 
   const groupSummaries = React.useMemo(() => {
     return groups.map(g => {
-      const annualRate = g === 'Jomar' ? 0.14 : 0.07;
-      const dailyRate = annualRate / 360;
+      // 1. Get the start date for this group
       const earliestTxDate = getEarliestTransactionDate(transactions, g);
-      const ledger = generateMasterLedger(transactions, g, earliestTxDate, today, dailyRate);
+      
+      // 2. Generate the ledger using the dynamic Rate Schedule
+      // (No longer calculating dailyRate here manually)
+      const ledger = generateMasterLedger(transactions, g, earliestTxDate, today, rateSchedule);
+      
+      // 3. Calculate balances based on that ledger
       const current = calculateCurrentBalances(ledger, earliestTxDate);
       const billingBreakdown = groupInterestByBilling(ledger, earliestTxDate, today);
 
@@ -36,7 +40,7 @@ function Dashboard({ transactions, tsikots }) {
         earliestTxDate: earliestTxDate
       };
     });
-  }, [transactions, groups, today]);
+  }, [transactions, groups, today, rateSchedule]); // Added rateSchedule to dependencies
 
   const tsikotStats = React.useMemo(() => {
     const acc = { 

@@ -10,8 +10,7 @@ function TsikotView({ tsikots, reload, supabase, formatDate, isBefore }) {
     car: '',
     date_bought: formatDate(new Date()),
     buy_price: '',
-    date_sold: '',
-    sell_price: '',
+    // REMOVED: date_sold and sell_price from initial state
     initialMisc: [],
     newMisc: { date: formatDate(new Date()), amount: '', notes: '' },
     isAddingMisc: false
@@ -32,18 +31,12 @@ function TsikotView({ tsikots, reload, supabase, formatDate, isBefore }) {
 
     setSaving(true);
 
-    if (form.date_sold && isBefore(form.date_sold, form.date_bought)) {
-      alert('"Date Sold" cannot be earlier than "Date Bought".');
-      setSaving(false);
-      return;
-    }
-
     const { error } = await supabase.from('tsikot').insert({
       car: form.car,
       date_bought: form.date_bought,
       buy_price: Number(form.buy_price),
-      date_sold: form.date_sold || null,
-      sell_price: form.sell_price ? Number(form.sell_price) : null,
+      date_sold: null, // Always null on creation
+      sell_price: null, // Always null on creation
       miscellaneous: form.initialMisc
     });
 
@@ -57,8 +50,6 @@ function TsikotView({ tsikots, reload, supabase, formatDate, isBefore }) {
       car: '',
       date_bought: formatDate(new Date()),
       buy_price: '',
-      date_sold: '',
-      sell_price: '',
       initialMisc: [],
       newMisc: { date: formatDate(new Date()), amount: '', notes: '' },
       isAddingMisc: false
@@ -187,74 +178,46 @@ function TsikotView({ tsikots, reload, supabase, formatDate, isBefore }) {
         <div className='mb-6 p-5 bg-[#F0EFEA] shadow-sm border-2 border-black'>
             <h4 className='font-semibold mb-4 text-stone-700'>Add New Car</h4>
             
-           {/* --- MODIFIED GRID STARTS HERE --- */}
+           {/* --- SIMPLIFIED GRID --- */}
             <div className='grid grid-cols-10 gap-y-3 gap-x-2'>
             
-            {/* Car Model (Unchanged) */}
-            <div className='flex flex-col col-span-10'>
-                <label className='text-xs font-medium mb-1 text-stone-500'>Car Model</label>
-                <input
-                type='text'
-                placeholder='Car Model'
-                className={inputStyle}
-                value={form.car}
-                onChange={e => setForm({ ...form, car: e.target.value })}
-                />
-            </div>
+                {/* Car Model */}
+                <div className='flex flex-col col-span-10 md:col-span-4'>
+                    <label className='text-xs font-medium mb-1 text-stone-500'>Car Model</label>
+                    <input
+                    type='text'
+                    placeholder='Car Model'
+                    className={inputStyle}
+                    value={form.car}
+                    onChange={e => setForm({ ...form, car: e.target.value })}
+                    />
+                </div>
 
-            {/* Date Bought */}
-            {/* Mobile: Row 2, Col 1-5 | Desktop: Row 2, Col 1-5 */}
-            <div className='flex flex-col col-span-4 md:col-span-5'>
-                <label className='text-xs font-medium mb-1 text-stone-500'>Date Bought</label>
-                <input
-                type='date'
-                className={inputStyle}
-                value={form.date_bought}
-                onChange={e => setForm({ ...form, date_bought: e.target.value })}
-                />
-            </div>
+                {/* Date Bought */}
+                <div className='flex flex-col col-span-5 md:col-span-3'>
+                    <label className='text-xs font-medium mb-1 text-stone-500'>Date Bought</label>
+                    <input
+                    type='date'
+                    className={inputStyle}
+                    value={form.date_bought}
+                    onChange={e => setForm({ ...form, date_bought: e.target.value })}
+                    />
+                </div>
 
-            {/* Date Sold (MOVED UP) */}
-            {/* Mobile: Row 2, Col 6-10 | Desktop: Row 3, Col 1-5 */}
-            <div className='flex flex-col col-span-4 col-start-6 justify-end md:col-span-5 md:col-start-1 md:row-start-3'>
-                <label className='text-xs font-medium mb-1 text-stone-500'>Date Sold (opt)</label>
-                <input
-                type='date'
-                className={inputStyle}
-                value={form.date_sold}
-                onChange={e => setForm({ ...form, date_sold: e.target.value })}
-                />
+                {/* Buy Price */}
+                <div className='flex flex-col col-span-5 md:col-span-3'>
+                    <label className='text-xs font-medium mb-1 text-stone-500'>Buy Price</label>
+                    <input
+                    type='number'
+                    step='0.01'
+                    placeholder='Buy Price'
+                    className={`${inputStyle} [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none`}
+                    value={form.buy_price}
+                    onChange={e => setForm({ ...form, buy_price: e.target.value })}
+                    />
+                </div>
             </div>
-
-            {/* Buy Price (MOVED DOWN) */}
-            {/* Mobile: Row 3, Col 1-5 | Desktop: Row 2, Col 6-10 */}
-            <div className='flex flex-col col-span-5 md:col-start-6 md:row-start-2'>
-                <label className='text-xs font-medium mb-1 text-stone-500'>Buy Price</label>
-                <input
-                type='number'
-                step='0.01'
-                placeholder='Buy Price'
-                className={`${inputStyle} [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none`}
-                value={form.buy_price}
-                onChange={e => setForm({ ...form, buy_price: e.target.value })}
-                />
-            </div>
-
-            {/* Sell Price */}
-            {/* Mobile: Row 3, Col 6-10 | Desktop: Row 3, Col 6-10 */}
-            <div className='flex flex-col col-span-5 md:col-start-6 md:row-start-3'>
-                <label className='text-xs font-medium mb-1 text-stone-500'>Sell Price (opt)</label>
-                <input
-                type='number'
-                step='0.01'
-                placeholder='Sell Price'
-                className={`${inputStyle} [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none`}
-                value={form.sell_price}
-                onChange={e => setForm({ ...form, sell_price: e.target.value })}
-                />
-            </div>
-            </div>
-            {/* --- MODIFIED GRID ENDS HERE --- */}
+            {/* --- END SIMPLIFIED GRID --- */}
 
             <div className='mt-4'>
             {form.initialMisc.length > 0 && (
@@ -289,11 +252,9 @@ function TsikotView({ tsikots, reload, supabase, formatDate, isBefore }) {
             )}
 
             {(form.isAddingMisc || form.initialMisc.length > 0) && (
-                // 1. Replaced the "box" div with this border-top div
                 <div className='pt-3 mt-3 border-t-2 border-black'>
-                    {/* 2. Added a 10-column grid, aligning items to the end (bottom) */}
                     <div className='grid grid-cols-10 gap-y-3 gap-x-2 items-end'>
-                        {/* 3. Date field: 50% on mobile, 30% on desktop */}
+                        {/* Date field */}
                         <div className='flex flex-col col-span-4 md:col-span-3'>
                             <label className='text-xs font-medium mb-1 text-stone-500'>Date</label>
                             <input
@@ -303,7 +264,7 @@ function TsikotView({ tsikots, reload, supabase, formatDate, isBefore }) {
                             onChange={e => setForm(prev => ({ ...prev, newMisc: { ...prev.newMisc, date: e.target.value } }))}
                             />
                         </div>
-                        {/* 4. Amount field: 50% on mobile, 20% on desktop */}
+                        {/* Amount field */}
                         <div className='flex flex-col col-span-10 md:col-span-3'>
                             <label className='text-xs font-medium mb-1 text-stone-500'>Amount</label>
                             <input
@@ -315,7 +276,7 @@ function TsikotView({ tsikots, reload, supabase, formatDate, isBefore }) {
                             onChange={e => setForm(prev => ({ ...prev, newMisc: { ...prev.newMisc, amount: e.target.value } }))}
                             />
                         </div>
-                        {/* 5. Notes field: 100% on mobile, 30% on desktop */}
+                        {/* Notes field */}
                         <div className='flex flex-col col-span-10 md:col-span-4'>
                             <label className='text-xs font-medium mb-1 text-stone-500'>Notes</label>
                             <input
@@ -327,7 +288,7 @@ function TsikotView({ tsikots, reload, supabase, formatDate, isBefore }) {
                             />
                         </div>
                         
-                        {/* 6. Buttons: 100% on mobile, 20% on desktop */}
+                        {/* Buttons */}
                         <div className='col-span-10 md:col-span-2'>
                             <div className='flex gap-2 w-full md:w-auto'>
                                 <button
@@ -362,7 +323,7 @@ function TsikotView({ tsikots, reload, supabase, formatDate, isBefore }) {
             <button
             onClick={handleSave}
             disabled={saving || !form.car || !form.buy_price}
-            className='mt-4 px-6 py-2 bg-indigo-600 text-white hover:bg-indigo-700 font-medium shadow-sm transition-all rounded-none'
+            className='mt-4 px-6 py-2 bg-indigo-600 text-white hover:bg-indigo-700 font-medium shadow-sm transition-all rounded-none disabled:bg-stone-300 disabled:text-stone-500 disabled:border-stone-300 disabled:cursor-not-allowed'
             >
             {saving ? 'Saving...' : 'Save Car'}
             </button>

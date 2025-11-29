@@ -380,10 +380,10 @@ function EditTsikotModal({
           >
             Cancel
           </button>
-          <button
+            <button
             onClick={handleSave}
             disabled={isSaving || !isDirty || !editForm.car || Number(editForm.buy_price) <= 0}
-            className='px-4 py-2 bg-indigo-600 text-white hover:bg-indigo-700 disabled:bg-stone-400 disabled:cursor-not-allowed border-2 border-black font-medium rounded-none'
+            className='px-4 py-2 bg-indigo-600 text-white hover:bg-indigo-700 disabled:bg-stone-300 disabled:text-stone-500 disabled:border-stone-300 disabled:cursor-not-allowed border-2 border-black font-medium rounded-none'
           >
             {isSaving ? 'Saving...' : 'Save Changes'}
           </button>

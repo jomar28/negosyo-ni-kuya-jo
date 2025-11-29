@@ -186,10 +186,10 @@ function EditTransactionModal({
           >
             Cancel
           </button>
-          <button
+            <button
             onClick={handleSave}
             disabled={isSaving || !isDirty || !editForm.amount || Number(editForm.amount) <= 0}
-            className='px-5 py-2.5 bg-indigo-600 text-white hover:bg-indigo-700 border-2 border-black hover:shadow-none hover:translate-x-[2px] hover:translate-y-[2px] disabled:bg-stone-300 disabled:shadow-none disabled:cursor-not-allowed disabled:border-stone-400 font-medium transition-all rounded-none'
+            className='px-5 py-2.5 bg-indigo-600 text-white hover:bg-indigo-700 border-2 border-black hover:shadow-none hover:translate-x-[2px] hover:translate-y-[2px] disabled:bg-stone-300 disabled:text-stone-500 disabled:border-stone-300 disabled:shadow-none disabled:cursor-not-allowed font-medium transition-all rounded-none'
           >
             {isSaving ? 'Saving...' : 'Save Changes'}
           </button>

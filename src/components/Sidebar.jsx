@@ -3,13 +3,9 @@ import React from 'react';
 function Sidebar({ view, setView, isAdmin, handleLogin, logout, authButtonStyle }) {
   const getButtonStyles = (targetView) => {
     const baseStyle = 'w-full text-left p-3 border-b-2 font-bold transition-all duration-200';
-    
-    // Matches the "Card" aesthetic when active: Beige bg + thick black border
     if (view === targetView) {
       return `${baseStyle} bg-[#F0EFEA] border-black text-gray-900`;
     }
-    
-    // clean look when inactive, subtle hover
     return `${baseStyle} border-transparent text-gray-500 hover:text-gray-900 hover:bg-gray-100`;
   };
 
@@ -38,6 +34,16 @@ function Sidebar({ view, setView, isAdmin, handleLogin, logout, authButtonStyle 
         >
           Tsikots
         </button>
+
+        {/* HIDDEN unless logged in */}
+        {isAdmin && (
+          <button
+            onClick={() => setView('rates')}
+            className={getButtonStyles('rates')}
+          >
+            Rates
+          </button>
+        )}
       </nav>
         <div className='mt-auto pt-6 border-t-2 border-stone-300 flex justify-center'>
         <button 
