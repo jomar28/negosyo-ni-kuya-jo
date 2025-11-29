@@ -4,7 +4,10 @@ import { formatDate } from '../utils/interest';
 import ConfirmationModal from './ConfirmationModal';
 
 function RateScheduleView({ rateSchedule = [], onRatesChange }) {
-  const [form, setForm] = useState({ effective_date: '', annual_rate: '' });
+    const [form, setForm] = useState({ 
+    effective_date: formatDate(new Date()), 
+    annual_rate: '' 
+    });
   const [loading, setLoading] = useState(false);
   const [editingId, setEditingId] = useState(null); 
   
@@ -22,10 +25,11 @@ function RateScheduleView({ rateSchedule = [], onRatesChange }) {
     });
   }
 
-  function cancelEdit() {
+    function cancelEdit() {
     setEditingId(null);
-    setForm({ effective_date: '', annual_rate: '' });
-  }
+    // FIX: Reset date to TODAY on cancel (instead of '')
+    setForm({ effective_date: formatDate(new Date()), annual_rate: '' }); 
+    }
 
   async function handleSave() {
     if (!form.effective_date || !form.annual_rate) return;
@@ -96,8 +100,9 @@ function RateScheduleView({ rateSchedule = [], onRatesChange }) {
           <h4 className='font-bold mb-4 uppercase tracking-wider'>
             {editingId ? 'Edit Rate Rule' : 'Add New Rate'}
           </h4>
-          
-          <div className='mb-4'>
+
+          <div className='grid grid-cols-10 gap-y-3 gap-x-2'>
+          <div className='flex flex-col col-span-4 md:col-span-10'>
             <label className='block text-xs font-bold uppercase text-gray-500 mb-1'>Effective Date</label>
             <input 
               type="date" 
@@ -107,7 +112,7 @@ function RateScheduleView({ rateSchedule = [], onRatesChange }) {
             />
           </div>
 
-          <div className='mb-6'>
+          <div className='flex flex-col col-span-10 mb-6'>
             <label className='block text-xs font-bold uppercase text-gray-500 mb-1'>New Rate (%)</label>
             <input 
               type="number" 
@@ -116,6 +121,7 @@ function RateScheduleView({ rateSchedule = [], onRatesChange }) {
               value={form.annual_rate}
               onChange={e => setForm({...form, annual_rate: e.target.value})}
             />
+          </div>
           </div>
 
           <div className="flex gap-2">

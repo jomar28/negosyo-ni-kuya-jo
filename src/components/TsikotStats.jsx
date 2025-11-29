@@ -15,13 +15,22 @@ function TsikotStats({ stats }) {
   const YearBreakdown = ({ title, totalValue, yearData, dataKey, isCurrency = true, isProfit = false }) => {
     const isOpen = openYears[title + dataKey];
     
+    // Toggle Logic
+    const handleToggle = () => {
+        setOpenYears(p => ({ ...p, [title + dataKey]: !p[title + dataKey] }));
+    };
+
     const totalValueClass = isProfit
       ? (totalValue >= 0 ? 'text-green-600' : 'text-rose-600')
       : 'text-gray-900';
 
     return (
-      // Applied bg-[#F0EFEA], border-2, border-black, rounded-none
-      <div className='p-5 bg-[#F0EFEA] border-2 border-black relative pb-12 transition-all duration-300 hover:shadow-sm'>
+      // 1. Add onClick to container
+      // 2. Add cursor-pointer
+      <div 
+        onClick={handleToggle}
+        className='p-5 bg-[#F0EFEA] border-2 border-black relative pb-12 transition-all duration-300 cursor-pointer'
+      >
         <div className='flex justify-between items-center'>
           <div>
             <span className='text-lg font-bold text-gray-900'>{title}</span>
@@ -83,13 +92,9 @@ function TsikotStats({ stats }) {
         )}
 
         <div className='absolute bottom-0 left-1/2 transform -translate-x-1/2 translate-y-1/2'>
-          {/* Collapsible icon styled with same theme + rounded-full */}
+          {/* 3. Remove specific onClick to allow bubble-up */}
           <button
-            onClick={(e) => {
-              e.stopPropagation();
-              setOpenYears(p => ({ ...p, [title + dataKey]: !p[title + dataKey] }));
-            }}
-            className={`p-1.5 bg-[#F0EFEA] border-2 border-black rounded-full text-gray-900 hover:bg-gray-100 transition-all duration-300 ${isOpen ? 'rotate-180' : 'rotate-0'}`}
+            className={`p-1.5 bg-[#F0EFEA] border-2 border-black rounded-full text-gray-900 transition-all duration-300 ${isOpen ? 'rotate-180' : 'rotate-0'}`}
             aria-expanded={isOpen}
             aria-label={`Toggle details for ${title}`}
           >

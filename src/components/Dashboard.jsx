@@ -22,7 +22,6 @@ function Dashboard({ transactions, tsikots, rateSchedule = [] }) {
       const earliestTxDate = getEarliestTransactionDate(transactions, g);
       
       // 2. Generate the ledger using the dynamic Rate Schedule
-      // (No longer calculating dailyRate here manually)
       const ledger = generateMasterLedger(transactions, g, earliestTxDate, today, rateSchedule);
       
       // 3. Calculate balances based on that ledger
@@ -40,7 +39,7 @@ function Dashboard({ transactions, tsikots, rateSchedule = [] }) {
         earliestTxDate: earliestTxDate
       };
     });
-  }, [transactions, groups, today, rateSchedule]); // Added rateSchedule to dependencies
+  }, [transactions, groups, today, rateSchedule]);
 
   const tsikotStats = React.useMemo(() => {
     const acc = { 
@@ -144,7 +143,7 @@ function Dashboard({ transactions, tsikots, rateSchedule = [] }) {
 
   // Reusable Card Styles
   const cardStyle = 'p-5 md:p-6 bg-[#F0EFEA] border-2 border-black';
-  const collapseButtonStyle = 'p-1 bg-[#F0EFEA] border-2 border-black rounded-full text-gray-900 hover:bg-gray-100 transition-transform duration-300';
+  const collapseButtonStyle = 'p-1 bg-[#F0EFEA] border-2 border-black rounded-full text-gray-900 transition-transform duration-300';
 
   return (
     <div className='max-w-7xl mx-auto space-y-6'>
@@ -178,7 +177,13 @@ function Dashboard({ transactions, tsikots, rateSchedule = [] }) {
               const isGroupOpen = open[g.group];
 
               return (
-                <div key={g.group} className='p-4 md:p-5 bg-[#F0EFEA] border-2 border-black relative pb-10'>
+                <div 
+                  key={g.group} 
+                  // 1. Add onClick to container
+                  onClick={toggleOpen}
+                  // 2. Add cursor-pointer
+                  className='p-4 md:p-5 bg-[#F0EFEA] border-2 border-black relative pb-10 cursor-pointer transition-colors'
+                >
                   <div className='flex justify-between items-center'>
                     <div className='flex items-center gap-4'>
                       <div>
@@ -219,8 +224,8 @@ function Dashboard({ transactions, tsikots, rateSchedule = [] }) {
                   )}
 
                   <div className='absolute bottom-0 left-1/2 transform -translate-x-1/2 translate-y-1/2'>
+                    {/* 3. Remove specific onClick/stopPropagation to allow bubble-up */}
                     <button
-                      onClick={(e) => { e.stopPropagation(); toggleOpen(); }}
                       className={`${collapseButtonStyle} ${isGroupOpen ? 'rotate-180' : 'rotate-0'}`}
                     >
                       <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>

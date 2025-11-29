@@ -3,44 +3,46 @@ import { supabase } from './lib/supabaseClient';
 import { formatDate, isBefore } from './utils/interest';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 
+// --- SWIPER IMPORTS ---
+import { Swiper, SwiperSlide } from 'swiper/react';
+import { FreeMode } from 'swiper/modules'; 
+// Import Swiper styles
+import 'swiper/css';
+
 import Sidebar from './components/Sidebar';
 import MobileNavbar from './components/MobileNavbar';
 import Dashboard from './components/Dashboard';
 import TransactionsView from './components/TransactionsView';
 import TsikotView from './components/TsikotView';
 import LoginModal from './components/LoginModal';
-import RateScheduleView from './components/RateScheduleView'; // Already imported
+import RateScheduleView from './components/RateScheduleView';
 
 function MainLayout() {
   const [view, setView] = useState('dashboard');
   const [transactions, setTransactions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [tsikots, setTsikots] = useState([]);
-  const [rateSchedule, setRateSchedule] = useState([]); // Already defined
+  const [rateSchedule, setRateSchedule] = useState([]);
   
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
   const { isAdmin, logout } = useAuth();
 
-  // State for hiding nav on scroll
   const [lastScrollY, setLastScrollY] = useState(0);
   const [isNavVisible, setIsNavVisible] = useState(true);
-  const contentRef = useRef(null);
+  
+  // Swiper Instance State
+  const [swiperInstance, setSwiperInstance] = useState(null);
 
-  // --- UPDATED: Single function to load ALL data including Rates ---
   async function loadData() {
     const txReq = supabase.from('transactions').select('*');
     const carReq = supabase.from('tsikot').select('*');
-    const rateReq = supabase.from('rate_changes').select('*'); // Fetch rates
+    const rateReq = supabase.from('rate_changes').select('*');
 
     const [txRes, carRes, rateRes] = await Promise.all([txReq, carReq, rateReq]);
 
-    if (txRes.error) console.error('Error loading transactions:', txRes.error);
-    if (carRes.error) console.error('Error loading tsikots:', carRes.error);
-    if (rateRes.error) console.error('Error loading rates:', rateRes.error);
-
     if (txRes.data) setTransactions(txRes.data);
     if (carRes.data) setTsikots(carRes.data);
-    if (rateRes.data) setRateSchedule(rateRes.data); // Set rates
+    if (rateRes.data) setRateSchedule(rateRes.data);
 
     setLoading(false);
   }
@@ -48,25 +50,44 @@ function MainLayout() {
   useEffect(() => {
     loadData();
   }, []);
-  // -------------------------------------------------------------
+
+  // --- SYNC LOGIC: Navbar click controls Swiper ---
+  useEffect(() => {
+    if (swiperInstance && !swiperInstance.destroyed) {
+      if (view === 'dashboard') {
+        swiperInstance.slideTo(0);
+      } else if (view === 'rates' && isAdmin) {
+        swiperInstance.slideTo(1);
+      }
+    }
+  }, [view, swiperInstance, isAdmin]);
+
+  // --- SYNC LOGIC: Swiper swipe controls Navbar ---
+  const handleSlideChange = (swiper) => {
+    if (swiper.activeIndex === 0) {
+      setView('dashboard');
+    } else if (swiper.activeIndex === 1) {
+      setView('rates');
+    }
+  };
 
   const handleLogin = () => {
     setIsLoginModalOpen(true);
   };
 
-  // Scroll handler to show/hide nav
-  const handleScroll = () => {
-    if (contentRef.current) {
-      const currentScrollY = contentRef.current.scrollTop;
-      
-      // Hide on scroll down, show on scroll up
-      if (currentScrollY > lastScrollY && currentScrollY > 70) { 
-        setIsNavVisible(false); 
-      } else {
-        setIsNavVisible(true); 
-      }
-      setLastScrollY(currentScrollY);
+  // Detect Vertical Scroll to hide/show Navbar
+  const handleVerticalScroll = (e) => {
+    const currentScrollY = e.target.scrollTop;
+    
+    // Threshold to prevent jitter on small movements
+    if (Math.abs(currentScrollY - lastScrollY) < 5) return;
+
+    if (currentScrollY > lastScrollY && currentScrollY > 70) { 
+      setIsNavVisible(false); 
+    } else {
+      setIsNavVisible(true); 
     }
+    setLastScrollY(currentScrollY);
   };
 
   if (loading) {
@@ -78,6 +99,9 @@ function MainLayout() {
   }
 
   const authButtonStyle = "px-5 py-2 font-bold uppercase text-xs tracking-wider border-2 border-black transition-all rounded-none";
+
+  // Check if we should render the "Slider" layout (Dashboard + Rates)
+  const isSliderView = view === 'dashboard' || view === 'rates';
 
   return (
     <div 
@@ -104,6 +128,7 @@ function MainLayout() {
       </div>
 
       <div className='flex-1 flex flex-col h-screen overflow-hidden'>
+        {/* MOBILE TOP BAR */}
         <div 
           className={`md:hidden bg-[#F0EFEA]/90 p-4 flex justify-between items-center z-20 border-b border-stone-300 backdrop-blur-sm fixed top-0 w-full transition-transform duration-300 ${
             isNavVisible ? 'translate-y-0' : '-translate-y-full'
@@ -122,47 +147,79 @@ function MainLayout() {
             </button>
         </div>
 
-        <div 
-          ref={contentRef}
-          onScroll={handleScroll}
-          className='flex-1 overflow-y-auto p-4 pt-24 pb-32 md:p-8 md:pb-8 md:pt-8'
-        >
-          {/* UPDATED: Pass rateSchedule to Dashboard */}
-          {view === 'dashboard' && (
-            <Dashboard 
-              transactions={transactions} 
-              tsikots={tsikots} 
-              rateSchedule={rateSchedule} 
-            />
-          )}
+        {/* CONTENT AREA */}
+        
+        {/* CASE 1: Slider View (Dashboard + Rates) */}
+        {isSliderView ? (
+           <Swiper
+             modules={[FreeMode]}
+             onSwiper={setSwiperInstance}
+             onSlideChange={handleSlideChange}
+             initialSlide={view === 'rates' ? 1 : 0}
+             className="w-full h-full"
+             simulateTouch={true}
+             touchRatio={1} 
+             resistance={true} // Gives that "elastic" feel at the edges
+             resistanceRatio={0.5}
+             speed={400} // Speed of the snap animation
+           >
+              {/* SLIDE 1: DASHBOARD */}
+              <SwiperSlide className="h-full flex flex-col">
+                <div 
+                  className="h-full w-full overflow-y-auto pt-24 pb-32 md:pt-8 md:pb-8 px-4 md:px-8"
+                  onScroll={handleVerticalScroll} 
+                >
+                   <Dashboard 
+                      transactions={transactions} 
+                      tsikots={tsikots} 
+                      rateSchedule={rateSchedule} 
+                    />
+                </div>
+              </SwiperSlide>
 
-          {/* UPDATED: Pass rateSchedule to TransactionsView */}
-          {view === 'transactions' && (
-            <TransactionsView 
-              transactions={transactions} 
-              rateSchedule={rateSchedule} 
-              reload={loadData} 
-            />
-          )}
+              {/* SLIDE 2: RATES (Only if Admin) */}
+              {isAdmin && (
+                <SwiperSlide className="h-full flex flex-col">
+                  <div 
+                    className="h-full w-full overflow-y-auto pt-24 pb-32 md:pt-8 md:pb-8 px-4 md:px-8"
+                    onScroll={handleVerticalScroll}
+                  >
+                     <RateScheduleView onRatesChange={loadData} rateSchedule={rateSchedule}/>
+                  </div>
+                </SwiperSlide>
+              )}
+           </Swiper>
+        ) : (
+          /* CASE 2: Standard View (Transactions / Tsikot) */
+          <div 
+            onScroll={handleVerticalScroll}
+            className='flex-1 overflow-y-auto p-4 pt-24 pb-32 md:p-8 md:pb-8 md:pt-8'
+          >
+            {view === 'transactions' && (
+              <TransactionsView 
+                transactions={transactions} 
+                rateSchedule={rateSchedule} 
+                reload={loadData} 
+              />
+            )}
 
-          {view === 'tsikots' && (
-            <TsikotView
-              tsikots={tsikots}
-              reload={loadData}
-              supabase={supabase}
-              formatDate={formatDate}
-              isBefore={isBefore}
-            />
-          )}
-
-          {/* ADDED: New View for Rates */}
-          {view === 'rates' && <RateScheduleView onRatesChange={loadData} rateSchedule={rateSchedule}/>}
-        </div>
+            {view === 'tsikots' && (
+              <TsikotView
+                tsikots={tsikots}
+                reload={loadData}
+                supabase={supabase}
+                formatDate={formatDate}
+                isBefore={isBefore}
+              />
+            )}
+          </div>
+        )}
 
          <MobileNavbar 
             view={view} 
             setView={setView} 
             isNavVisible={isNavVisible} 
+            isAdmin={isAdmin}
           />
       </div>
     </div>
