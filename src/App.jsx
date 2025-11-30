@@ -16,6 +16,7 @@ import TransactionsView from './components/TransactionsView';
 import TsikotView from './components/TsikotView';
 import LoginModal from './components/LoginModal';
 import RateScheduleView from './components/RateScheduleView';
+import GroupsView from './components/GroupsView';
 
 function MainLayout() {
   const [view, setView] = useState('dashboard');
@@ -23,6 +24,7 @@ function MainLayout() {
   const [loading, setLoading] = useState(true);
   const [tsikots, setTsikots] = useState([]);
   const [rateSchedule, setRateSchedule] = useState([]);
+  const [groups, setGroups] = useState([]); // NEW STATE
   
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
   const { isAdmin, logout } = useAuth();
@@ -37,12 +39,14 @@ function MainLayout() {
     const txReq = supabase.from('transactions').select('*');
     const carReq = supabase.from('tsikot').select('*');
     const rateReq = supabase.from('rate_changes').select('*');
+    const groupReq = supabase.from('groups').select('*'); // FETCH GROUPS
 
-    const [txRes, carRes, rateRes] = await Promise.all([txReq, carReq, rateReq]);
+    const [txRes, carRes, rateRes, groupRes] = await Promise.all([txReq, carReq, rateReq, groupReq]);
 
     if (txRes.data) setTransactions(txRes.data);
     if (carRes.data) setTsikots(carRes.data);
     if (rateRes.data) setRateSchedule(rateRes.data);
+    if (groupRes.data) setGroups(groupRes.data);
 
     setLoading(false);
   }
@@ -173,6 +177,7 @@ function MainLayout() {
                       transactions={transactions} 
                       tsikots={tsikots} 
                       rateSchedule={rateSchedule} 
+                      groups={groups}
                     />
                 </div>
               </SwiperSlide>
@@ -200,6 +205,7 @@ function MainLayout() {
                 transactions={transactions} 
                 rateSchedule={rateSchedule} 
                 reload={loadData} 
+                groups={groups}
               />
             )}
 
@@ -211,6 +217,9 @@ function MainLayout() {
                 formatDate={formatDate}
                 isBefore={isBefore}
               />
+            )}
+            {view === 'groups' && (
+            <GroupsView groups={groups} onDataChange={loadData} />
             )}
           </div>
         )}

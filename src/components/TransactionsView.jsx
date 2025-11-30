@@ -4,17 +4,26 @@ import { formatDate } from '../utils/interest';
 import EditTransactionModal from './EditTransactionModal';
 import ConfirmationModal from './ConfirmationModal';
 import { useAuth } from '../contexts/AuthContext';
-import CustomSelect from './CustomSelect'; // Import the new component
+import CustomSelect from './CustomSelect';
 
-function TransactionsView({ transactions, rateSchedule = [], reload }) {
+function TransactionsView({ transactions, rateSchedule = [], groups = [], reload }) {
   const { isAdmin } = useAuth();
+  
+  // 1. Prepare Group Options from the DB list
+  // Fallback to defaults if list is empty
+  const groupOptions = groups.length > 0 
+    ? groups.map(g => g.name).sort() 
+    : ['Jomar', 'Jeff'];
+
   const [form, setForm] = useState({
     date: formatDate(new Date()),
     type: 'Withdrawal',
     amount: '',
-    group_name: 'Jomar',
+    // FIX: Explicitly default to 'Jomar'
+    group_name: 'Jomar', 
     notes: ''
   });
+  
   const [saving, setSaving] = useState(false);
   const [selectedIds, setSelectedIds] = useState([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -46,7 +55,8 @@ function TransactionsView({ transactions, rateSchedule = [], reload }) {
       date: formatDate(new Date()),
       type: 'Withdrawal',
       amount: '',
-      group_name: form.group_name,
+      // Sticky selection: keeps the last used group for faster entry
+      group_name: form.group_name, 
       notes: ''
     });
     setSaving(false);
@@ -114,7 +124,6 @@ function TransactionsView({ transactions, rateSchedule = [], reload }) {
 
   const sortedTxs = [...transactions].sort((a, b) => new Date(b.date) - new Date(a.date));
 
-  // Standard input style for text/number/date fields
   const inputStyle = "bg-[#F0EFEA] border-2 border-black rounded-none px-2 h-10 text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none w-full";
 
   return (
@@ -134,7 +143,6 @@ function TransactionsView({ transactions, rateSchedule = [], reload }) {
         <div className='mb-6 p-5 bg-[#F0EFEA] border-2 border-black shadow-sm'>
             <h4 className='font-semibold mb-4 text-gray-900'>Add New Transaction</h4>
             
-            {/* --- MODIFIED GRID --- */}
             <div className='grid grid-cols-10 gap-x-2 gap-y-3'>
             
             {/* DATE */}
@@ -148,7 +156,7 @@ function TransactionsView({ transactions, rateSchedule = [], reload }) {
                 />
             </div>
 
-            {/* TYPE (Using Custom Select) */}
+            {/* TYPE */}
             <div className='flex flex-col col-span-10 md:col-span-5'>
                 <label className='text-xs font-medium mb-1 text-stone-500'>Type</label>
                 <CustomSelect 
@@ -171,12 +179,12 @@ function TransactionsView({ transactions, rateSchedule = [], reload }) {
                 />
             </div>
 
-            {/* GROUP (Using Custom Select) */}
+            {/* GROUP - DYNAMIC */}
             <div className='flex flex-col col-span-10 md:col-span-5'>
                 <label className='text-xs font-medium mb-1 text-stone-500'>Group</label>
                 <CustomSelect 
                   value={form.group_name}
-                  options={['Jomar', 'Jeff']}
+                  options={groupOptions} 
                   onChange={(val) => setForm({ ...form, group_name: val })}
                 />
             </div>
@@ -192,8 +200,6 @@ function TransactionsView({ transactions, rateSchedule = [], reload }) {
                 />
             </div>
             </div>
-            {/* --- END MODIFIED GRID --- */}
-
 
             <button
             onClick={handleSave}
@@ -202,19 +208,6 @@ function TransactionsView({ transactions, rateSchedule = [], reload }) {
             >
             {saving ? 'Saving...' : 'Save Transaction'}
             </button>
-        </div>
-      )}
-
-      {/* --- Rest of your Table code below (Unchanged) --- */}
-      {isAdmin && selectedIds.length > 0 && (
-        <div className='mb-4 flex items-center gap-3 bg-rose-50 p-3 border-2 border-rose-200'>
-          <div className='text-sm text-rose-700'>{selectedIds.length} selected</div>
-          <button
-            onClick={confirmBulkDelete}
-            className='px-3 py-1 bg-rose-600 text-white text-sm hover:bg-rose-700 rounded-none'
-          >
-            Delete Selected
-          </button>
         </div>
       )}
 
@@ -242,7 +235,6 @@ function TransactionsView({ transactions, rateSchedule = [], reload }) {
                 <th className='p-3 text-left text-xs md:text-sm font-semibold text-gray-700 uppercase tracking-wider'>Type</th>
                 <th className='p-3 text-right text-xs md:text-sm font-semibold text-gray-700 uppercase tracking-wider'>Amount</th>
                 <th className='p-3 text-left text-xs md:text-sm font-semibold text-gray-700 uppercase tracking-wider'>Group</th>
-                {/* --- ADDED: Rate Column Header --- */}
                 <th className='p-3 text-center text-xs md:text-sm font-semibold text-gray-700 uppercase tracking-wider'>Rate</th>
                 <th className='p-3 text-left text-xs md:text-sm font-semibold text-gray-700 uppercase tracking-wider'>Notes</th>
                 {isAdmin && <th className='p-3 text-center text-xs md:text-sm font-semibold text-gray-700 uppercase tracking-wider'>Action</th>}
@@ -252,27 +244,31 @@ function TransactionsView({ transactions, rateSchedule = [], reload }) {
               {sortedTxs.map(t => {
                 let displayAmount = t.amount;
 
-                // --- NEW LOGIC: FIND ACTIVE RATE FOR THIS TRANSACTION ---
+                // --- 2. FIND ACTIVE RATE & MULTIPLIER ---
                 const txDateStr = formatDate(t.date);
                 
-                // 1. Find applicable rate from schedule (latest one on or before txDate)
+                // A. Base Rate from Rate Schedule
                 const activeRateConfig = rateSchedule
                     .filter(r => {
-                        // Ensure rate date is also YYYY-MM-DD string
                         const rateDateStr = formatDate(r.effective_date);
-                        // Compare strings: e.g. "2025-11-01" <= "2025-11-29"
                         return rateDateStr <= txDateStr;
                     })
                     .sort((a, b) => new Date(b.effective_date) - new Date(a.effective_date))[0];
                 
-                // 2. Default to 14% if none found
-                let activeRate = activeRateConfig ? Number(activeRateConfig.annual_rate) : 0.14;
+                let baseRate = activeRateConfig ? Number(activeRateConfig.annual_rate) : 0.14;
                 
-                // 3. Adjust for Jeff
-                if (t.group_name === 'Jeff') {
-                    activeRate = activeRate / 2;
+                // B. Group Multiplier
+                const groupData = groups.find(g => g.name === t.group_name);
+                let multiplier = 1.0;
+                
+                if (groupData) {
+                    multiplier = Number(groupData.interest_multiplier);
+                } else if (t.group_name === 'Jeff') {
+                    multiplier = 0.5; // Legacy fallback
                 }
-                // --------------------------------------------------------
+
+                const finalRate = baseRate * multiplier;
+                // ----------------------------------------
 
                 return (
                   <tr key={t.id} className='bg-[#F0EFEA] hover:bg-gray-100 transition-colors' onDoubleClick={() => startEdit(t)}>
@@ -310,9 +306,9 @@ function TransactionsView({ transactions, rateSchedule = [], reload }) {
                       {t.group_name}
                     </td>
 
-                    {/* --- ADDED: Display Active Rate --- */}
+                    {/* RATE COLUMN */}
                     <td className='p-3 text-center text-xs md:text-sm text-stone-500 font-medium'>
-                      {(activeRate * 100).toFixed(2)}%
+                      {(finalRate * 100).toFixed(2)}%
                     </td>
 
                     <td className='p-3 text-xs md:text-sm text-stone-500 truncate max-w-[150px]'>
@@ -345,6 +341,7 @@ function TransactionsView({ transactions, rateSchedule = [], reload }) {
       {isModalOpen && initialEditData && (
         <EditTransactionModal
           initialData={initialEditData}
+          groupOptions={groupOptions} // Pass dynamic groups
           onSave={handleModalSave}
           onCancel={handleModalCancel}
         />

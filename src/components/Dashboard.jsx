@@ -10,7 +10,7 @@ import {
 import { calculateMiscTotal, formatCurrency } from '../utils/helpers';
 import TsikotStats from './TsikotStats';
 
-function Dashboard({ transactions, tsikots, rateSchedule = [] }) {
+function Dashboard({ transactions, tsikots, rateSchedule = [], groups: groupsList = [] }) {
   const groups = Array.from(new Set(transactions.map(t => t.group_name)));
   const today = formatDate(new Date());
   const nextBilling = getNextBillingDate();
@@ -22,7 +22,7 @@ function Dashboard({ transactions, tsikots, rateSchedule = [] }) {
       const earliestTxDate = getEarliestTransactionDate(transactions, g);
       
       // 2. Generate the ledger using the dynamic Rate Schedule
-      const ledger = generateMasterLedger(transactions, g, earliestTxDate, today, rateSchedule);
+      const ledger = generateMasterLedger(transactions, g, earliestTxDate, today, rateSchedule, groupsList);
       
       // 3. Calculate balances based on that ledger
       const current = calculateCurrentBalances(ledger, earliestTxDate);
@@ -39,7 +39,7 @@ function Dashboard({ transactions, tsikots, rateSchedule = [] }) {
         earliestTxDate: earliestTxDate
       };
     });
-  }, [transactions, groups, today, rateSchedule]);
+  }, [transactions, groups, today, rateSchedule, groupsList]);
 
   const tsikotStats = React.useMemo(() => {
     const acc = { 

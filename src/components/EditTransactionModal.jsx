@@ -1,11 +1,13 @@
 import React, { useEffect, useState, useRef } from 'react';
+import { createPortal } from 'react-dom'; // Import Portal
 import { supabase } from '../lib/supabaseClient';
 import { simpleIsEqual } from '../utils/helpers';
 import ConfirmationModal from './ConfirmationModal';
-import CustomSelect from './CustomSelect'; // Import the new component
+import CustomSelect from './CustomSelect';
 
 function EditTransactionModal({
   initialData,
+  groupOptions = [],
   onSave,
   onCancel,
 }) {
@@ -18,7 +20,6 @@ function EditTransactionModal({
 
   useEffect(() => {
     function handleClickOutside(event) {
-      // Check if the click is outside the modal AND not part of a dropdown (dropdowns might portal or render on top)
       if (modalRef.current && !modalRef.current.contains(event.target)) {
         handleAttemptCancel();
       }
@@ -27,15 +28,13 @@ function EditTransactionModal({
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
     };
-  }, [isDirty, onCancel, handleAttemptCancel]); // Added handleAttemptCancel to dependency array
+  }, [isDirty, onCancel]); // Removed recursive dependency
 
-  // Handle standard inputs (text, date, number)
   function handleChange(e) {
     const { name, value } = e.target;
     setEditForm(prev => ({ ...prev, [name]: value }));
   }
 
-  // Helper for CustomSelect which passes value directly
   function handleSelectChange(name, value) {
     setEditForm(prev => ({ ...prev, [name]: value }));
   }
@@ -84,13 +83,11 @@ function EditTransactionModal({
     onSave();
   }
 
-  // Common Input Style
   const inputStyle = "bg-[#F0EFEA] border-2 border-black rounded-none px-2 h-10 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none w-full transition-all";
-  
-  // Textarea specific style
   const textareaStyle = "bg-[#F0EFEA] border-2 border-black rounded-none p-2 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none w-full transition-all resize-none";
 
-  return (
+  // Wrap in Portal
+  return createPortal(
     <div className='fixed inset-0 z-[100] bg-stone-900/75 backdrop-blur-sm flex items-center justify-center p-4'>
       
       <ConfirmationModal 
@@ -104,15 +101,11 @@ function EditTransactionModal({
 
       <div
         ref={modalRef}
-        // Added overflow-visible here so the Dropdown can visually "pop out" if needed, 
-        // though the inner container handles scrolling.
         className='bg-[#F0EFEA] border-2 border-black w-full max-w-lg max-h-[90vh] flex flex-col transform transition-all scale-100'
       >
-        {/* overflow-y-auto handles the scrolling content */}
         <div className='p-6 overflow-y-auto overflow-x-visible'>
           <h2 className='text-2xl font-bold mb-6 text-stone-800 border-b-2 border-black pb-2'>Edit Transaction</h2>
           
-          {/* --- MODIFIED GRID --- */}
           <div className='grid grid-cols-10 gap-4'>
             
             {/* Date */}
@@ -127,7 +120,7 @@ function EditTransactionModal({
               />
             </div>
 
-            {/* Type - Using CustomSelect */}
+            {/* Type */}
             <div className='flex flex-col col-span-10 md:col-span-5'>
               <label className='text-xs font-semibold mb-1.5 text-stone-500 uppercase tracking-wider'>Type</label>
               <CustomSelect 
@@ -151,12 +144,12 @@ function EditTransactionModal({
               />
             </div>
 
-            {/* Group - Using CustomSelect */}
+            {/* Group */}
             <div className='flex flex-col col-span-10 md:col-span-5'>
               <label className='text-xs font-semibold mb-1.5 text-stone-500 uppercase tracking-wider'>Group</label>
               <CustomSelect 
                 value={editForm.group_name}
-                options={['Jomar', 'Jeff']}
+                options={groupOptions} 
                 onChange={(val) => handleSelectChange('group_name', val)}
               />
             </div>
@@ -174,10 +167,8 @@ function EditTransactionModal({
               />
             </div>
           </div>
-          {/* --- END MODIFIED GRID --- */}
         </div>
         
-        {/* Footer Actions */}
         <div className='bg-[#F0EFEA] px-6 py-4 flex justify-end gap-3 border-t-2 border-black flex-shrink-0'>
           <button
             onClick={handleAttemptCancel}
@@ -195,7 +186,8 @@ function EditTransactionModal({
           </button>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body // Target
   );
 }
 

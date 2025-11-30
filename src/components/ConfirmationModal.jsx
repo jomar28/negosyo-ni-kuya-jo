@@ -1,9 +1,11 @@
 import React from 'react';
+import { createPortal } from 'react-dom'; // 1. Import createPortal
 
 function ConfirmationModal({ isOpen, title, message, onConfirm, onCancel, isDangerous = false }) {
   if (!isOpen) return null;
 
-  return (
+  // 2. Wrap the JSX in createPortal(..., document.body)
+  return createPortal(
     <div className='fixed inset-0 z-[150] bg-stone-900/60 backdrop-blur-sm flex items-center justify-center p-4 animate-fade-in'>
       <div className='bg-[#F0EFEA] w-full max-w-sm border-2 border-black transform transition-all scale-100'>
         <div className='p-6'>
@@ -34,7 +36,8 @@ function ConfirmationModal({ isOpen, title, message, onConfirm, onCancel, isDang
           </button>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body // Target destination
   );
 }
 

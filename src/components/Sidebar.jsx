@@ -37,12 +37,10 @@ function Sidebar({ view, setView, isAdmin, handleLogin, logout, authButtonStyle 
 
         {/* HIDDEN unless logged in */}
         {isAdmin && (
-          <button
-            onClick={() => setView('rates')}
-            className={getButtonStyles('rates')}
-          >
-            Rates
-          </button>
+          <>
+            <button onClick={() => setView('rates')} className={getButtonStyles('rates')}>Rates</button>
+            <button onClick={() => setView('groups')} className={getButtonStyles('groups')}>Groups</button>
+          </>
         )}
       </nav>
         <div className='mt-auto pt-6 border-t-2 border-stone-300 flex justify-center'>

@@ -4,15 +4,16 @@ import { formatDate } from '../utils/interest';
 import ConfirmationModal from './ConfirmationModal';
 
 function RateScheduleView({ rateSchedule = [], onRatesChange }) {
-    const [form, setForm] = useState({ 
+  const [form, setForm] = useState({ 
     effective_date: formatDate(new Date()), 
     annual_rate: '' 
-    });
+  });
   const [loading, setLoading] = useState(false);
   const [editingId, setEditingId] = useState(null); 
   
   const [confirmConfig, setConfirmConfig] = useState({ isOpen: false, id: null });
 
+  // Sort: Newest date first
   const rates = [...rateSchedule].sort((a, b) => 
     new Date(b.effective_date) - new Date(a.effective_date)
   );
@@ -25,11 +26,10 @@ function RateScheduleView({ rateSchedule = [], onRatesChange }) {
     });
   }
 
-    function cancelEdit() {
+  function cancelEdit() {
     setEditingId(null);
-    // FIX: Reset date to TODAY on cancel (instead of '')
     setForm({ effective_date: formatDate(new Date()), annual_rate: '' }); 
-    }
+  }
 
   async function handleSave() {
     if (!form.effective_date || !form.annual_rate) return;
@@ -66,19 +66,26 @@ function RateScheduleView({ rateSchedule = [], onRatesChange }) {
   }
 
   async function handleDelete() {
+    // 1. Capture ID safely
+    const idToDelete = confirmConfig.id;
+
+    // 2. Close Modal
     setConfirmConfig({ ...confirmConfig, isOpen: false });
-    const { error } = await supabase.from('rate_changes').delete().eq('id', confirmConfig.id);
+    
+    // 3. Perform Delete
+    const { error } = await supabase.from('rate_changes').delete().eq('id', idToDelete);
     
     if (!error) {
         if (onRatesChange) onRatesChange();
-        if (editingId === confirmConfig.id) cancelEdit();
+        if (editingId === idToDelete) cancelEdit();
     } else {
         alert('Failed to delete rate rule.');
     }
   }
 
-  // Unified Disabled Button Style
   const disabledBtnStyle = "disabled:bg-stone-300 disabled:text-stone-500 disabled:border-stone-300 disabled:cursor-not-allowed";
+  const inputStyle = "bg-[#F0EFEA] border-2 border-black rounded-none px-2 h-10  text-sm placeholder:text-stone-400 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none w-full";
+
 
   return (
     <div className='max-w-4xl mx-auto'>
@@ -102,26 +109,26 @@ function RateScheduleView({ rateSchedule = [], onRatesChange }) {
           </h4>
 
           <div className='grid grid-cols-10 gap-y-3 gap-x-2'>
-          <div className='flex flex-col col-span-4 md:col-span-10'>
-            <label className='block text-xs font-bold uppercase text-gray-500 mb-1'>Effective Date</label>
-            <input 
-              type="date" 
-              className="w-full bg-[#F0EFEA] border-2 border-black p-2 rounded-none outline-none focus:ring-2 focus:ring-indigo-600"
-              value={form.effective_date}
-              onChange={e => setForm({...form, effective_date: e.target.value})}
-            />
-          </div>
+            <div className='flex flex-col col-span-4 md:col-span-10'>
+              <label className='text-xs font-medium mb-1 text-stone-500'>Effective Date</label>
+              <input 
+                type="date" 
+                className={inputStyle}
+                value={form.effective_date}
+                onChange={e => setForm({...form, effective_date: e.target.value})}
+              />
+            </div>
 
-          <div className='flex flex-col col-span-10 mb-6'>
-            <label className='block text-xs font-bold uppercase text-gray-500 mb-1'>New Rate (%)</label>
-            <input 
-              type="number" 
-              placeholder="e.g. 16"
-              className="w-full bg-[#F0EFEA] border-2 border-black p-2 rounded-none outline-none focus:ring-2 focus:ring-indigo-600 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-              value={form.annual_rate}
-              onChange={e => setForm({...form, annual_rate: e.target.value})}
-            />
-          </div>
+            <div className='flex flex-col col-span-10 mb-6'>
+              <label className='text-xs font-medium mb-1 text-stone-500'>New Rate (%)</label>
+              <input 
+                type="number" 
+                placeholder="Interest rate"
+                className={inputStyle}
+                value={form.annual_rate}
+                onChange={e => setForm({...form, annual_rate: e.target.value})}
+              />
+            </div>
           </div>
 
           <div className="flex gap-2">
@@ -149,34 +156,39 @@ function RateScheduleView({ rateSchedule = [], onRatesChange }) {
         <div className='bg-[#F0EFEA] border-2 border-black p-6'>
           <h4 className='font-bold mb-4 uppercase tracking-wider'>Active Schedule</h4>
           
-          <div className='space-y-0 divide-y-2 divide-stone-100'>
-            {rates.map((r) => (
+          <div className='space-y-0 divide-y-2 divide-stone-300'>
+            {rates.map((r, index) => (
               <div key={r.id} className={`flex justify-between items-center py-3 ${editingId === r.id ? 'bg-indigo-200 -mx-2 px-2' : ''}`}>
                 <div>
                   <div className='font-bold text-gray-900'>{(r.annual_rate * 100).toFixed(2)}%</div>
                   <div className='text-xs text-gray-500'>Effective: {formatDate(r.effective_date, 'MMM D, YYYY')}</div>
                 </div>
                 
-                <div className="flex items-center gap-3">
-                    <span className='text-xs font-bold bg-green-100 text-green-800 px-2 py-1 rounded-full border border-green-200'>
-                        Active
-                    </span>
+                <div className="flex items-center gap-2">
+                    {/* STATUS BADGE */}
+                    {index === 0 ? (
+                        <span className='text-xs font-bold bg-green-100 text-green-800 px-2 py-1 rounded-full border border-green-200'>
+                            Active
+                        </span>
+                    ) : (
+                        <span className='text-xs font-bold bg-red-200 text-red-600 px-2 py-1 rounded-full border border-red-300'>
+                            Inactive
+                        </span>
+                    )}
                     
-                    {/* Action Buttons - Always Visible */}
-                    <div className="flex gap-2">
-                        <button 
-                            onClick={() => startEdit(r)}
-                            className="text-indigo-600 hover:text-indigo-800 text-xs font-bold uppercase"
-                        >
-                            Edit
-                        </button>
-                        <button 
-                            onClick={() => confirmDelete(r.id)}
-                            className="text-rose-500 hover:text-rose-700 text-xs font-bold uppercase"
-                        >
-                            Delete
-                        </button>
-                    </div>
+                    {/* BUTTONS WITH PADDING FOR TOUCH */}
+                    <button 
+                        onClick={() => startEdit(r)}
+                        className="text-indigo-600 hover:text-indigo-800 text-xs md:text-sm font-medium"
+                    >
+                        Edit
+                    </button>
+                    <button 
+                        onClick={() => confirmDelete(r.id)}
+                        className="text-rose-600 hover:text-rose-800 text-xs md:text-sm font-medium"
+                    >
+                        Delete
+                    </button>
                 </div>
               </div>
             ))}
@@ -186,9 +198,12 @@ function RateScheduleView({ rateSchedule = [], onRatesChange }) {
                 <div className='font-bold text-gray-500'>14.00%</div>
                 <div className='text-xs text-gray-400'>Default</div>
               </div>
-              <span className='text-xs font-bold bg-gray-100 text-gray-500 px-2 py-1 rounded-full border border-gray-200'>
-                Fallback
-              </span>
+              
+              <div className="flex items-center gap-2">
+                  <span className='text-xs font-bold bg-gray-100 text-gray-500 px-2 py-1 rounded-full border border-gray-200'>
+                    Fallback
+                  </span>
+              </div>
             </div>
           </div>
         </div>

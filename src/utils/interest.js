@@ -100,7 +100,7 @@ export function getNextBillingDate(fromDate = null) {
  * Generates a day-by-day ledger of balances and interest,
  * correctly applying payments based on bank's priority rules.
  */
-export function generateMasterLedger(transactions, groupName, fromDate, toDate, rateSchedule = []) {
+export function generateMasterLedger(transactions, groupName, fromDate, toDate, rateSchedule = [], groupsList = []) {
   const txs = transactions
     .filter(t => t.group_name === groupName)
     .map(t => ({ ...t, date: formatDate(t.date) }))
@@ -115,28 +115,28 @@ export function generateMasterLedger(transactions, groupName, fromDate, toDate, 
   let cursor = new Date(fromDate);
   const endDate = new Date(toDate);
   
-  // Timezone adjustment
   cursor.setTime(cursor.getTime() + cursor.getTimezoneOffset() * 60 * 1000);
 
   while (cursor <= endDate) {
     const cursorStr = formatDate(cursor);
     
-    // --- 1. DETERMINE RATE FOR THIS DAY ---
-    // Find the latest rate that is active on or before today
+    // 1. RATE LOOKUP
     const activeRateConfig = rateSchedule
         .filter(r => r.effective_date <= cursorStr)
         .sort((a, b) => new Date(b.effective_date) - new Date(a.effective_date))[0];
 
-    // Default to 14% (0.14) if no schedule is found
     let currentAnnualRate = activeRateConfig ? Number(activeRateConfig.annual_rate) : 0.14;
 
-    // Apply Jeff's "Half Rate" Logic
-    if (groupName === 'Jeff') {
-        currentAnnualRate = currentAnnualRate / 2;
-    }
+    // --- NEW LOGIC: MULTIPLIER LOOKUP ---
+    // Find the group config. Default to 1.0 (Full Interest) if not found.
+    const groupConfig = groupsList.find(g => g.name === groupName);
+    const multiplier = groupConfig ? Number(groupConfig.interest_multiplier) : 1.0;
+
+    // Apply multiplier (e.g., 14% * 0.5 = 7%)
+    currentAnnualRate = currentAnnualRate * multiplier;
+    // ------------------------------------
 
     const dailyRate = currentAnnualRate / 360;
-    // --------------------------------------
 
     // 2. Accrue Interest
     const dailyInterestAdded = principal * dailyRate;
@@ -166,7 +166,6 @@ export function generateMasterLedger(transactions, groupName, fromDate, toDate, 
       }
     }
     
-    // 4. Store State
     ledger.push({
       date: cursorStr,
       principal: principal,
@@ -174,7 +173,7 @@ export function generateMasterLedger(transactions, groupName, fromDate, toDate, 
       dailyInterestAdded: dailyInterestAdded,
       principalPaid: principalPaid,
       interestPaid: interestPaid,
-      appliedRate: currentAnnualRate // Added for reference
+      appliedRate: currentAnnualRate
     });
 
     cursor = addDays(cursor, 1);

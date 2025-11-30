@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
+import { createPortal } from 'react-dom'; // Import Portal
 import { useAuth } from '../contexts/AuthContext';
 
 function LoginModal({ isOpen, onClose }) {
@@ -9,22 +10,18 @@ function LoginModal({ isOpen, onClose }) {
   const { login } = useAuth();
   const modalRef = useRef(null);
   
-  // 1. Changed ref to point to username instead of PIN
   const usernameInputRef = useRef(null); 
 
   useEffect(() => {
     if (isOpen) {
-      // Reset loading state just in case it got stuck previously
       setIsLoggingIn(false); 
       setTimeout(() => {
-        // 2. Focus username on open
         usernameInputRef.current?.focus(); 
       }, 100);
       setError('');
     }
   }, [isOpen]);
 
-  // ... (Handle click outside remains same) ...
   useEffect(() => {
     function handleClickOutside(event) {
       if (modalRef.current && !modalRef.current.contains(event.target)) {
@@ -50,7 +47,6 @@ function LoginModal({ isOpen, onClose }) {
         onClose();
         setUsername('');
         setPin('');
-        // 3. CRITICAL FIX: Reset loading state on success
         setIsLoggingIn(false); 
       }
     }, 300);
@@ -60,7 +56,8 @@ function LoginModal({ isOpen, onClose }) {
 
   const inputStyle = "bg-[#F0EFEA] border-2 border-black rounded-none px-2 h-10 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none w-full transition-all";
 
-  return (
+  // Wrap in Portal
+  return createPortal(
     <div className='fixed inset-0 z-[150] bg-stone-900/60 backdrop-blur-sm flex items-center justify-center p-4 animate-fade-in'>
       <div 
         ref={modalRef} 
@@ -75,7 +72,7 @@ function LoginModal({ isOpen, onClose }) {
             <div className='flex flex-col mb-3'>
               <label className='text-xs font-semibold mb-1.5 text-stone-500 uppercase tracking-wider'>Username</label>
               <input
-                ref={usernameInputRef} /* 4. Attached ref here */
+                ref={usernameInputRef}
                 type='text'
                 name='username'
                 className={inputStyle}
@@ -88,7 +85,6 @@ function LoginModal({ isOpen, onClose }) {
             <div className='flex flex-col'>
               <label className='text-xs font-semibold mb-1.5 text-stone-500 uppercase tracking-wider'>PIN</label>
               <input
-                /* Removed ref from here */
                 type='password'
                 name='pin'
                 className={`${inputStyle} [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none`}
@@ -123,7 +119,8 @@ function LoginModal({ isOpen, onClose }) {
           </div>
         </form>
       </div>
-    </div>
+    </div>,
+    document.body // Target
   );
 }
 
