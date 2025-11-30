@@ -151,7 +151,9 @@ function TsikotView({ tsikots, reload, supabase, formatDate, isBefore }) {
 
   return (
     <div className='max-w-7xl mx-auto'>
-      <h3 className='text-2xl md:text-3xl font-bold mb-6 text-stone-800'>My Tsikots</h3>
+      <h3 className='text-2xl md:text-3xl font-bold mb-6 text-stone-800'>
+        {sortedTsikots.length > 0 ? 'My Tsikots' : 'No Tsikots'}
+      </h3>
 
       <ConfirmationModal 
         isOpen={confirmConfig.isOpen}
@@ -330,101 +332,103 @@ function TsikotView({ tsikots, reload, supabase, formatDate, isBefore }) {
         </div>
       )}
 
-      <div className='bg-[#F0EFEA] shadow-sm border-2 border-black overflow-hidden'>
-        <div className='overflow-x-auto'>
-          <table className='min-w-full border-collapse whitespace-nowrap'>
-            <thead>
-              <tr className='bg-[#F0EFEA] border-b-2 border-black'>
-                {isAdmin && (
-                    <th className='p-3 text-center'>
-                    {sortedTsikots.length > 0 && (
-                        <input
-                            type='checkbox'
-                            checked={selectedIds.length === sortedTsikots.length && sortedTsikots.length > 0}
-                            onChange={e =>
-                            setSelectedIds(e.target.checked ? sortedTsikots.map(t => t.id) : [])
-                            }
-                            aria-label='select all'
-                            className="accent-indigo-600 h-4 w-4"
-                        />
-                        )}
-                    </th>
-                )}
-                <th className='p-3 text-left text-xs md:text-sm font-semibold text-stone-600 uppercase tracking-wider'>Car</th>
-                <th className='p-3 text-left text-xs md:text-sm font-semibold text-stone-600 uppercase tracking-wider'>Date Bought</th>
-                <th className='p-3 text-right text-xs md:text-sm font-semibold text-stone-600 uppercase tracking-wider'>Buy Price</th>
-                <th className='p-3 text-left text-xs md:text-sm font-semibold text-stone-600 uppercase tracking-wider'>Date Sold</th>
-                <th className='p-3 text-right text-xs md:text-sm font-semibold text-stone-600 uppercase tracking-wider'>Sell Price</th>
-                <th className='p-3 text-right text-xs md:text-sm font-semibold text-stone-600 uppercase tracking-wider'>Misc. Cost</th>
-                {isAdmin && <th className='p-3 text-center text-xs md:text-sm font-semibold text-stone-600 uppercase tracking-wider'>Action</th>}
-              </tr>
-            </thead>
-            <tbody className='divide-y-0'>
-              {sortedTsikots.map(t => {
-                const totalMisc = calculateMiscTotal(t.miscellaneous || []);
-                return (
-                  <tr key={t.id} className='hover:bg-gray-100 transition-colors cursor-pointer' onDoubleClick={() => startEdit(t)}>
-                    {isAdmin && (
-                        <td className='p-3 text-center'>
-                        <input
-                            type='checkbox'
-                            checked={selectedIds.includes(t.id)}
-                            onChange={() => toggleSelect(t.id)}
-                            aria-label={`select ${t.id}`}
-                            className="accent-indigo-600 h-4 w-4"
-                        />
-                        </td>
-                    )}
-                    <td className='p-3 text-xs md:text-sm text-stone-800'>{t.car}</td>
-                    <td className='p-3 text-xs md:text-sm text-stone-600'>{t.date_bought ? formatDate(t.date_bought, 'MMM D, YYYY') : '-'}</td>
-                    <td className='p-3 text-xs md:text-sm text-right text-stone-800 font-medium'>{formatCurrency(t.buy_price)}</td>
-                    <td className='p-3 text-xs md:text-sm text-stone-600'>{t.date_sold ? formatDate(t.date_sold, 'MMM D, YYYY') : '-'}</td>
-                    <td className='p-3 text-xs md:text-sm text-right text-stone-800 font-medium'>{t.sell_price ? formatCurrency(t.sell_price) : '-'}</td>
-
-                    <td className='p-3 text-xs md:text-sm text-right relative group'>
-                      <span className={totalMisc > 0 ? 'font-bold text-rose-600' : 'text-stone-400'}>
-                        {totalMisc > 0 ? formatCurrency(totalMisc) : '-'}
-                      </span>
-                      {totalMisc > 0 && (
-                        <div className='absolute right-0 top-full mt-1 w-64 bg-[#F0EFEA] border-2 border-black text-stone-800 text-xs p-3 shadow-lg z-10 pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity'>
-                          <div className='font-bold mb-1 border-b-2 border-black pb-1'>Miscellaneous Expenses:</div>
-                          {(Array.isArray(t.miscellaneous) ? t.miscellaneous : []).map((item, index) => (
-                            <div key={index} className='flex justify-between py-1'>
-                              <span>{item.date ? formatDate(item.date, 'MMM D') : '...'}</span>
-                              <span className='truncate max-w-[80px]'>{item.notes || 'N/A'}</span>
-                              <span>{formatCurrency(item.amount)}</span>
-                            </div>
-                          ))}
-                          <div className='mt-1 pt-1 border-t-2 border-black font-bold flex justify-between'>
-                            <span>Total:</span>
-                            <span>{formatCurrency(totalMisc)}</span>
-                          </div>
-                        </div>
+      {sortedTsikots.length > 0 && (
+        <div className='bg-[#F0EFEA] shadow-sm border-2 border-black overflow-hidden'>
+          <div className='overflow-x-auto'>
+            <table className='min-w-full border-collapse whitespace-nowrap'>
+              <thead>
+                <tr className='bg-[#F0EFEA] border-b-2 border-black'>
+                  {isAdmin && (
+                      <th className='p-3 text-center'>
+                      {sortedTsikots.length > 0 && (
+                          <input
+                              type='checkbox'
+                              checked={selectedIds.length === sortedTsikots.length && sortedTsikots.length > 0}
+                              onChange={e =>
+                              setSelectedIds(e.target.checked ? sortedTsikots.map(t => t.id) : [])
+                              }
+                              aria-label='select all'
+                              className="accent-indigo-600 h-4 w-4"
+                          />
+                          )}
+                      </th>
+                  )}
+                  <th className='p-3 text-left text-xs md:text-sm font-semibold text-stone-600 uppercase tracking-wider'>Car</th>
+                  <th className='p-3 text-left text-xs md:text-sm font-semibold text-stone-600 uppercase tracking-wider'>Date Bought</th>
+                  <th className='p-3 text-right text-xs md:text-sm font-semibold text-stone-600 uppercase tracking-wider'>Buy Price</th>
+                  <th className='p-3 text-left text-xs md:text-sm font-semibold text-stone-600 uppercase tracking-wider'>Date Sold</th>
+                  <th className='p-3 text-right text-xs md:text-sm font-semibold text-stone-600 uppercase tracking-wider'>Sell Price</th>
+                  <th className='p-3 text-right text-xs md:text-sm font-semibold text-stone-600 uppercase tracking-wider'>Misc. Cost</th>
+                  {isAdmin && <th className='p-3 text-center text-xs md:text-sm font-semibold text-stone-600 uppercase tracking-wider'>Action</th>}
+                </tr>
+              </thead>
+              <tbody className='divide-y-0'>
+                {sortedTsikots.map(t => {
+                  const totalMisc = calculateMiscTotal(t.miscellaneous || []);
+                  return (
+                    <tr key={t.id} className='hover:bg-gray-100 transition-colors cursor-pointer' onDoubleClick={() => startEdit(t)}>
+                      {isAdmin && (
+                          <td className='p-3 text-center'>
+                          <input
+                              type='checkbox'
+                              checked={selectedIds.includes(t.id)}
+                              onChange={() => toggleSelect(t.id)}
+                              aria-label={`select ${t.id}`}
+                              className="accent-indigo-600 h-4 w-4"
+                          />
+                          </td>
                       )}
-                    </td>
+                      <td className='p-3 text-xs md:text-sm text-stone-800'>{t.car}</td>
+                      <td className='p-3 text-xs md:text-sm text-stone-600'>{t.date_bought ? formatDate(t.date_bought, 'MMM D, YYYY') : '-'}</td>
+                      <td className='p-3 text-xs md:text-sm text-right text-stone-800 font-medium'>{formatCurrency(t.buy_price)}</td>
+                      <td className='p-3 text-xs md:text-sm text-stone-600'>{t.date_sold ? formatDate(t.date_sold, 'MMM D, YYYY') : '-'}</td>
+                      <td className='p-3 text-xs md:text-sm text-right text-stone-800 font-medium'>{t.sell_price ? formatCurrency(t.sell_price) : '-'}</td>
 
-                    {isAdmin && (
-                        <td className='p-3 text-center text-xs md:text-sm'>
-                        <div className='flex justify-center gap-2'>
-                            <button onClick={() => startEdit(t)} className='text-indigo-600 hover:text-indigo-800 font-medium'>
-                            Edit
-                            </button>
-                            <button
-                            onClick={() => confirmDelete(t.id)}
-                            className='text-rose-600 hover:text-rose-800 disabled:text-stone-400 font-medium'
-                            >
-                            Delete
-                            </button>
-                        </div>
-                        </td>
-                    )}
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
+                      <td className='p-3 text-xs md:text-sm text-right relative group'>
+                        <span className={totalMisc > 0 ? 'font-bold text-rose-600' : 'text-stone-400'}>
+                          {totalMisc > 0 ? formatCurrency(totalMisc) : '-'}
+                        </span>
+                        {totalMisc > 0 && (
+                          <div className='absolute right-0 top-full mt-1 w-64 bg-[#F0EFEA] border-2 border-black text-stone-800 text-xs p-3 shadow-lg z-10 pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity'>
+                            <div className='font-bold mb-1 border-b-2 border-black pb-1'>Miscellaneous Expenses:</div>
+                            {(Array.isArray(t.miscellaneous) ? t.miscellaneous : []).map((item, index) => (
+                              <div key={index} className='flex justify-between py-1'>
+                                <span>{item.date ? formatDate(item.date, 'MMM D') : '...'}</span>
+                                <span className='truncate max-w-[80px]'>{item.notes || 'N/A'}</span>
+                                <span>{formatCurrency(item.amount)}</span>
+                              </div>
+                            ))}
+                            <div className='mt-1 pt-1 border-t-2 border-black font-bold flex justify-between'>
+                              <span>Total:</span>
+                              <span>{formatCurrency(totalMisc)}</span>
+                            </div>
+                          </div>
+                        )}
+                      </td>
+
+                      {isAdmin && (
+                          <td className='p-3 text-center text-xs md:text-sm'>
+                          <div className='flex justify-center gap-2'>
+                              <button onClick={() => startEdit(t)} className='text-indigo-600 hover:text-indigo-800 font-medium'>
+                              Edit
+                              </button>
+                              <button
+                              onClick={() => confirmDelete(t.id)}
+                              className='text-rose-600 hover:text-rose-800 disabled:text-stone-400 font-medium'
+                              >
+                              Delete
+                              </button>
+                          </div>
+                          </td>
+                      )}
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
         </div>
-      </div>
+      )}
 
       {isModalOpen && initialEditData && (
         <EditTsikotModal

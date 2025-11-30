@@ -24,7 +24,7 @@ function MainLayout() {
   const [loading, setLoading] = useState(true);
   const [tsikots, setTsikots] = useState([]);
   const [rateSchedule, setRateSchedule] = useState([]);
-  const [groups, setGroups] = useState([]); // NEW STATE
+  const [groups, setGroups] = useState([]); 
   
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
   const { isAdmin, logout } = useAuth();
@@ -39,7 +39,7 @@ function MainLayout() {
     const txReq = supabase.from('transactions').select('*');
     const carReq = supabase.from('tsikot').select('*');
     const rateReq = supabase.from('rate_changes').select('*');
-    const groupReq = supabase.from('groups').select('*'); // FETCH GROUPS
+    const groupReq = supabase.from('groups').select('*');
 
     const [txRes, carRes, rateRes, groupRes] = await Promise.all([txReq, carReq, rateReq, groupReq]);
 
@@ -55,23 +55,39 @@ function MainLayout() {
     loadData();
   }, []);
 
-  // --- SYNC LOGIC: Navbar click controls Swiper ---
+  // --- SYNC LOGIC: Navbar click controls Swiper (Mobile Only) ---
   useEffect(() => {
+    // Only run this logic if we are actually using the swiper (which is now mobile only)
     if (swiperInstance && !swiperInstance.destroyed) {
-      if (view === 'dashboard') {
-        swiperInstance.slideTo(0);
-      } else if (view === 'rates' && isAdmin) {
-        swiperInstance.slideTo(1);
+      const viewIndices = {
+        'dashboard': 0,
+        'rates': 1,
+        'groups': 2
+      };
+      
+      // ONLY slide if the view matches a slide AND we aren't already there.
+      // This prevents the infinite loop/thrashing that blocks clicks.
+      if (view in viewIndices) {
+        const targetIndex = viewIndices[view];
+        if (swiperInstance.realIndex !== targetIndex) {
+          swiperInstance.slideToLoop(targetIndex);
+        }
       }
     }
   }, [view, swiperInstance, isAdmin]);
 
   // --- SYNC LOGIC: Swiper swipe controls Navbar ---
   const handleSlideChange = (swiper) => {
-    if (swiper.activeIndex === 0) {
-      setView('dashboard');
-    } else if (swiper.activeIndex === 1) {
-      setView('rates');
+    const index = swiper.realIndex;
+    
+    // Determine the view based on the index
+    let nextView = 'dashboard';
+    if (index === 1 && isAdmin) nextView = 'rates';
+    else if (index === 2 && isAdmin) nextView = 'groups';
+
+    // Only update state if it's actually different to prevent re-renders
+    if (view !== nextView) {
+      setView(nextView);
     }
   };
 
@@ -82,8 +98,6 @@ function MainLayout() {
   // Detect Vertical Scroll to hide/show Navbar
   const handleVerticalScroll = (e) => {
     const currentScrollY = e.target.scrollTop;
-    
-    // Threshold to prevent jitter on small movements
     if (Math.abs(currentScrollY - lastScrollY) < 5) return;
 
     if (currentScrollY > lastScrollY && currentScrollY > 70) { 
@@ -92,6 +106,30 @@ function MainLayout() {
       setIsNavVisible(true); 
     }
     setLastScrollY(currentScrollY);
+  };
+
+  const getInitialSlideIndex = () => {
+    if (view === 'rates') return 1;
+    if (view === 'groups') return 2;
+    return 0; // dashboard
+  };
+
+  // Helper to render the active component for the "Standard/Desktop" view
+  const renderCurrentView = () => {
+    switch (view) {
+      case 'dashboard':
+        return <Dashboard transactions={transactions} tsikots={tsikots} rateSchedule={rateSchedule} groups={groups} />;
+      case 'rates':
+        return <RateScheduleView onRatesChange={loadData} rateSchedule={rateSchedule} />;
+      case 'groups':
+        return <GroupsView groups={groups} onDataChange={loadData} />;
+      case 'transactions':
+        return <TransactionsView transactions={transactions} rateSchedule={rateSchedule} reload={loadData} groups={groups} />;
+      case 'tsikots':
+        return <TsikotView tsikots={tsikots} reload={loadData} supabase={supabase} formatDate={formatDate} isBefore={isBefore} />;
+      default:
+        return <Dashboard transactions={transactions} tsikots={tsikots} rateSchedule={rateSchedule} groups={groups} />;
+    }
   };
 
   if (loading) {
@@ -104,8 +142,8 @@ function MainLayout() {
 
   const authButtonStyle = "px-5 py-2 font-bold uppercase text-xs tracking-wider border-2 border-black transition-all rounded-none";
 
-  // Check if we should render the "Slider" layout (Dashboard + Rates)
-  const isSliderView = view === 'dashboard' || view === 'rates';
+  // Is this one of the views that should be in the Swiper on Mobile?
+  const isSliderView = ['dashboard', 'rates', 'groups'].includes(view);
 
   return (
     <div 
@@ -131,7 +169,7 @@ function MainLayout() {
             />
       </div>
 
-      <div className='flex-1 flex flex-col h-screen overflow-hidden'>
+      <div className='flex-1 flex flex-col h-screen overflow-hidden relative z-0'>
         {/* MOBILE TOP BAR */}
         <div 
           className={`md:hidden bg-[#F0EFEA]/90 p-4 flex justify-between items-center z-20 border-b border-stone-300 backdrop-blur-sm fixed top-0 w-full transition-transform duration-300 ${
@@ -153,76 +191,72 @@ function MainLayout() {
 
         {/* CONTENT AREA */}
         
-        {/* CASE 1: Slider View (Dashboard + Rates) */}
-        {isSliderView ? (
-           <Swiper
-             modules={[FreeMode]}
-             onSwiper={setSwiperInstance}
-             onSlideChange={handleSlideChange}
-             initialSlide={view === 'rates' ? 1 : 0}
-             className="w-full h-full"
-             simulateTouch={true}
-             touchRatio={1} 
-             resistance={true} // Gives that "elastic" feel at the edges
-             resistanceRatio={0.5}
-             speed={400} // Speed of the snap animation
-           >
-              {/* SLIDE 1: DASHBOARD */}
-              <SwiperSlide className="h-full flex flex-col">
-                <div 
-                  className="h-full w-full overflow-y-auto pt-24 pb-32 md:pt-8 md:pb-8 px-4 md:px-8"
-                  onScroll={handleVerticalScroll} 
-                >
-                   <Dashboard 
-                      transactions={transactions} 
-                      tsikots={tsikots} 
-                      rateSchedule={rateSchedule} 
-                      groups={groups}
-                    />
-                </div>
-              </SwiperSlide>
-
-              {/* SLIDE 2: RATES (Only if Admin) */}
-              {isAdmin && (
+        {/* 1. MOBILE SWIPER (Only visible on Mobile AND when in a Slider View) */}
+        {isSliderView && (
+          <div className="md:hidden h-full">
+             <Swiper
+               modules={[FreeMode]}
+               onSwiper={setSwiperInstance}
+               onSlideChange={handleSlideChange}
+               loop={isAdmin} // Enable infinite loop
+               initialSlide={getInitialSlideIndex()}
+               className="w-full h-full"
+               simulateTouch={true}
+               touchRatio={1} 
+               resistance={true}
+               resistanceRatio={0.5}
+               speed={400}
+             >
+                {/* SLIDE 1: DASHBOARD */}
                 <SwiperSlide className="h-full flex flex-col">
                   <div 
-                    className="h-full w-full overflow-y-auto pt-24 pb-32 md:pt-8 md:pb-8 px-4 md:px-8"
-                    onScroll={handleVerticalScroll}
+                    className="h-full w-full overflow-y-auto pt-24 pb-32 px-4"
+                    onScroll={handleVerticalScroll} 
                   >
-                     <RateScheduleView onRatesChange={loadData} rateSchedule={rateSchedule}/>
+                     <Dashboard 
+                        transactions={transactions} 
+                        tsikots={tsikots} 
+                        rateSchedule={rateSchedule} 
+                        groups={groups}
+                      />
                   </div>
                 </SwiperSlide>
-              )}
-           </Swiper>
-        ) : (
-          /* CASE 2: Standard View (Transactions / Tsikot) */
-          <div 
-            onScroll={handleVerticalScroll}
-            className='flex-1 overflow-y-auto p-4 pt-24 pb-32 md:p-8 md:pb-8 md:pt-8'
-          >
-            {view === 'transactions' && (
-              <TransactionsView 
-                transactions={transactions} 
-                rateSchedule={rateSchedule} 
-                reload={loadData} 
-                groups={groups}
-              />
-            )}
 
-            {view === 'tsikots' && (
-              <TsikotView
-                tsikots={tsikots}
-                reload={loadData}
-                supabase={supabase}
-                formatDate={formatDate}
-                isBefore={isBefore}
-              />
-            )}
-            {view === 'groups' && (
-            <GroupsView groups={groups} onDataChange={loadData} />
-            )}
+                {/* SLIDE 2: RATES (Only if Admin) */}
+                {isAdmin && (
+                  <SwiperSlide className="h-full flex flex-col">
+                    <div 
+                      className="h-full w-full overflow-y-auto pt-24 pb-32 px-4"
+                      onScroll={handleVerticalScroll}
+                    >
+                       <RateScheduleView onRatesChange={loadData} rateSchedule={rateSchedule}/>
+                    </div>
+                  </SwiperSlide>
+                )}
+
+                {/* SLIDE 3: GROUPS (Only if Admin) */}
+                {isAdmin && (
+                  <SwiperSlide className="h-full flex flex-col">
+                    <div 
+                      className="h-full w-full overflow-y-auto pt-24 pb-32 px-4"
+                      onScroll={handleVerticalScroll}
+                    >
+                       <GroupsView groups={groups} onDataChange={loadData} />
+                    </div>
+                  </SwiperSlide>
+                )}
+             </Swiper>
           </div>
         )}
+
+        {/* 2. STANDARD SCROLL VIEW */}
+        {/* Visible on Desktop ALWAYS. Visible on Mobile ONLY if NOT in slider view. */}
+        <div 
+          onScroll={handleVerticalScroll}
+          className={`flex-1 overflow-y-auto p-4 pt-24 pb-32 md:p-8 md:pb-8 md:pt-8 ${isSliderView ? 'hidden md:block' : 'block'}`}
+        >
+           {renderCurrentView()}
+        </div>
 
          <MobileNavbar 
             view={view} 

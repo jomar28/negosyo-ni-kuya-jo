@@ -128,7 +128,9 @@ function TransactionsView({ transactions, rateSchedule = [], groups = [], reload
 
   return (
     <div className='max-w-7xl mx-auto'>
-      <h3 className='text-2xl md:text-3xl font-bold mb-6 text-gray-900'>Transactions</h3>
+      <h3 className='text-2xl md:text-3xl font-bold mb-6 text-gray-900'>
+        {sortedTxs.length > 0 ? 'Transactions' : 'No Transactions'}
+      </h3>
 
       <ConfirmationModal 
         isOpen={confirmConfig.isOpen}
@@ -211,132 +213,134 @@ function TransactionsView({ transactions, rateSchedule = [], groups = [], reload
         </div>
       )}
 
-      <div className='bg-[#F0EFEA] border-2 border-black shadow-sm overflow-hidden'>
-        <div className='overflow-x-auto'>
-          <table className='min-w-full border-collapse whitespace-nowrap'>
-            <thead>
-              <tr className='bg-[#F0EFEA] border-b-2 border-black'>
-                {isAdmin && (
-                    <th className='p-3 text-center'>
-                    {sortedTxs.length > 0 && (
-                        <input
-                            type='checkbox'
-                            checked={selectedIds.length === sortedTxs.length && sortedTxs.length > 0}
-                            onChange={e =>
-                            setSelectedIds(e.target.checked ? sortedTxs.map(t => t.id) : [])
-                            }
-                            aria-label='select all'
-                            className="accent-indigo-600 h-4 w-4"
-                        />
-                        )}
-                    </th>
-                )}
-                <th className='p-3 text-left text-xs md:text-sm font-semibold text-gray-700 uppercase tracking-wider'>Date</th>
-                <th className='p-3 text-left text-xs md:text-sm font-semibold text-gray-700 uppercase tracking-wider'>Type</th>
-                <th className='p-3 text-right text-xs md:text-sm font-semibold text-gray-700 uppercase tracking-wider'>Amount</th>
-                <th className='p-3 text-left text-xs md:text-sm font-semibold text-gray-700 uppercase tracking-wider'>Group</th>
-                <th className='p-3 text-center text-xs md:text-sm font-semibold text-gray-700 uppercase tracking-wider'>Rate</th>
-                <th className='p-3 text-left text-xs md:text-sm font-semibold text-gray-700 uppercase tracking-wider'>Notes</th>
-                {isAdmin && <th className='p-3 text-center text-xs md:text-sm font-semibold text-gray-700 uppercase tracking-wider'>Action</th>}
-              </tr>
-            </thead>
-            <tbody className='divide-y-0'>
-              {sortedTxs.map(t => {
-                let displayAmount = t.amount;
+      {sortedTxs.length > 0 && (
+        <div className='bg-[#F0EFEA] border-2 border-black shadow-sm overflow-hidden'>
+          <div className='overflow-x-auto'>
+            <table className='min-w-full border-collapse whitespace-nowrap'>
+              <thead>
+                <tr className='bg-[#F0EFEA] border-b-2 border-black'>
+                  {isAdmin && (
+                      <th className='p-3 text-center'>
+                      {sortedTxs.length > 0 && (
+                          <input
+                              type='checkbox'
+                              checked={selectedIds.length === sortedTxs.length && sortedTxs.length > 0}
+                              onChange={e =>
+                              setSelectedIds(e.target.checked ? sortedTxs.map(t => t.id) : [])
+                              }
+                              aria-label='select all'
+                              className="accent-indigo-600 h-4 w-4"
+                          />
+                          )}
+                      </th>
+                  )}
+                  <th className='p-3 text-left text-xs md:text-sm font-semibold text-gray-700 uppercase tracking-wider'>Date</th>
+                  <th className='p-3 text-left text-xs md:text-sm font-semibold text-gray-700 uppercase tracking-wider'>Type</th>
+                  <th className='p-3 text-right text-xs md:text-sm font-semibold text-gray-700 uppercase tracking-wider'>Amount</th>
+                  <th className='p-3 text-left text-xs md:text-sm font-semibold text-gray-700 uppercase tracking-wider'>Group</th>
+                  <th className='p-3 text-center text-xs md:text-sm font-semibold text-gray-700 uppercase tracking-wider'>Rate</th>
+                  <th className='p-3 text-left text-xs md:text-sm font-semibold text-gray-700 uppercase tracking-wider'>Notes</th>
+                  {isAdmin && <th className='p-3 text-center text-xs md:text-sm font-semibold text-gray-700 uppercase tracking-wider'>Action</th>}
+                </tr>
+              </thead>
+              <tbody className='divide-y-0'>
+                {sortedTxs.map(t => {
+                  let displayAmount = t.amount;
 
-                // --- 2. FIND ACTIVE RATE & MULTIPLIER ---
-                const txDateStr = formatDate(t.date);
-                
-                // A. Base Rate from Rate Schedule
-                const activeRateConfig = rateSchedule
-                    .filter(r => {
-                        const rateDateStr = formatDate(r.effective_date);
-                        return rateDateStr <= txDateStr;
-                    })
-                    .sort((a, b) => new Date(b.effective_date) - new Date(a.effective_date))[0];
-                
-                let baseRate = activeRateConfig ? Number(activeRateConfig.annual_rate) : 0.14;
-                
-                // B. Group Multiplier
-                const groupData = groups.find(g => g.name === t.group_name);
-                let multiplier = 1.0;
-                
-                if (groupData) {
-                    multiplier = Number(groupData.interest_multiplier);
-                } else if (t.group_name === 'Jeff') {
-                    multiplier = 0.5; // Legacy fallback
-                }
+                  // --- 2. FIND ACTIVE RATE & MULTIPLIER ---
+                  const txDateStr = formatDate(t.date);
+                  
+                  // A. Base Rate from Rate Schedule
+                  const activeRateConfig = rateSchedule
+                      .filter(r => {
+                          const rateDateStr = formatDate(r.effective_date);
+                          return rateDateStr <= txDateStr;
+                      })
+                      .sort((a, b) => new Date(b.effective_date) - new Date(a.effective_date))[0];
+                  
+                  let baseRate = activeRateConfig ? Number(activeRateConfig.annual_rate) : 0.14;
+                  
+                  // B. Group Multiplier
+                  const groupData = groups.find(g => g.name === t.group_name);
+                  let multiplier = 1.0;
+                  
+                  if (groupData) {
+                      multiplier = Number(groupData.interest_multiplier);
+                  } else if (t.group_name === 'Jeff') {
+                      multiplier = 0.5; // Legacy fallback
+                  }
 
-                const finalRate = baseRate * multiplier;
-                // ----------------------------------------
+                  const finalRate = baseRate * multiplier;
+                  // ----------------------------------------
 
-                return (
-                  <tr key={t.id} className='bg-[#F0EFEA] hover:bg-gray-100 transition-colors' onDoubleClick={() => startEdit(t)}>
-                    {isAdmin && (
-                        <td className='p-3 text-center'>
-                        <input
-                            type='checkbox'
-                            checked={selectedIds.includes(t.id)}
-                            onChange={() => toggleSelect(t.id)}
-                            aria-label={`select ${t.id}`}
-                            className="accent-indigo-600 h-4 w-4"
-                        />
-                        </td>
-                    )}
-                    <td className='p-3 text-xs md:text-sm text-gray-900'>
-                      {formatDate(t.date, 'MMM D, YYYY')}
-                    </td>
-                    <td className='p-3 text-xs md:text-sm'>
-                      <span
-                        className={`px-2 py-1 text-[10px] md:text-xs font-bold uppercase tracking-wide ${
-                          t.type === 'Withdrawal'
-                            ? 'text-indigo-700'
-                            : 'text-green-700'
-                        }`}
-                      >
-                        {t.type}
-                      </span>
-                    </td>
-                    <td className='p-3 text-xs md:text-sm text-right font-medium text-gray-900'>
-                      {`₱${Number(displayAmount).toLocaleString('en-PH', {
-                        minimumFractionDigits: 2
-                      })}`}
-                    </td>
-                    <td className='p-3 text-xs md:text-sm text-stone-600'>
-                      {t.group_name}
-                    </td>
+                  return (
+                    <tr key={t.id} className='bg-[#F0EFEA] hover:bg-gray-100 transition-colors' onDoubleClick={() => startEdit(t)}>
+                      {isAdmin && (
+                          <td className='p-3 text-center'>
+                          <input
+                              type='checkbox'
+                              checked={selectedIds.includes(t.id)}
+                              onChange={() => toggleSelect(t.id)}
+                              aria-label={`select ${t.id}`}
+                              className="accent-indigo-600 h-4 w-4"
+                          />
+                          </td>
+                      )}
+                      <td className='p-3 text-xs md:text-sm text-gray-900'>
+                        {formatDate(t.date, 'MMM D, YYYY')}
+                      </td>
+                      <td className='p-3 text-xs md:text-sm'>
+                        <span
+                          className={`px-2 py-1 text-[10px] md:text-xs font-bold uppercase tracking-wide ${
+                            t.type === 'Withdrawal'
+                              ? 'text-indigo-700'
+                              : 'text-green-700'
+                          }`}
+                        >
+                          {t.type}
+                        </span>
+                      </td>
+                      <td className='p-3 text-xs md:text-sm text-right font-medium text-gray-900'>
+                        {`₱${Number(displayAmount).toLocaleString('en-PH', {
+                          minimumFractionDigits: 2
+                        })}`}
+                      </td>
+                      <td className='p-3 text-xs md:text-sm text-stone-600'>
+                        {t.group_name}
+                      </td>
 
-                    {/* RATE COLUMN */}
-                    <td className='p-3 text-center text-xs md:text-sm text-stone-500 font-medium'>
-                      {(finalRate * 100).toFixed(2)}%
-                    </td>
+                      {/* RATE COLUMN */}
+                      <td className='p-3 text-center text-xs md:text-sm text-stone-500 font-medium'>
+                        {(finalRate * 100).toFixed(2)}%
+                      </td>
 
-                    <td className='p-3 text-xs md:text-sm text-stone-500 truncate max-w-[150px]'>
-                      {t.notes || '-'}
-                    </td>
-                    
-                    {isAdmin && (
-                        <td className='p-3 text-center text-xs md:text-sm'>
-                        <div className='flex justify-center gap-2'>
-                            <button onClick={() => startEdit(t)} className='text-indigo-600 hover:text-indigo-800 font-medium'>
-                            Edit
-                            </button>
-                            <button
-                            onClick={() => confirmDelete(t.id)}
-                            className='text-rose-600 hover:text-rose-800 disabled:text-stone-400 font-medium'
-                            >
-                            Delete
-                            </button>
-                        </div>
-                        </td>
-                    )}
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
+                      <td className='p-3 text-xs md:text-sm text-stone-500 truncate max-w-[150px]'>
+                        {t.notes || '-'}
+                      </td>
+                      
+                      {isAdmin && (
+                          <td className='p-3 text-center text-xs md:text-sm'>
+                          <div className='flex justify-center gap-2'>
+                              <button onClick={() => startEdit(t)} className='text-indigo-600 hover:text-indigo-800 font-medium'>
+                              Edit
+                              </button>
+                              <button
+                              onClick={() => confirmDelete(t.id)}
+                              className='text-rose-600 hover:text-rose-800 disabled:text-stone-400 font-medium'
+                              >
+                              Delete
+                              </button>
+                          </div>
+                          </td>
+                      )}
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
         </div>
-      </div>
+      )}
 
       {isModalOpen && initialEditData && (
         <EditTransactionModal
