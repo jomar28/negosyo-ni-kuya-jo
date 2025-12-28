@@ -14,6 +14,7 @@ import CustomSelect from './CustomSelect';
 function TransactionsView({ transactions, rateSchedule = [], groups = [], reload }) {
   const { isAdmin } = useAuth();
   const [viewMode, setViewMode] = useState('all');
+  const [isSelectionMode, setIsSelectionMode] = useState(false); // NEW: Toggle for checkboxes
 
   const groupOptions = groups.length > 0 
     ? groups.map(g => g.name).sort() 
@@ -34,6 +35,7 @@ function TransactionsView({ transactions, rateSchedule = [], groups = [], reload
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [initialEditData, setInitialEditData] = useState(null);
   const [confirmConfig, setConfirmConfig] = useState({ isOpen: false, type: null, id: null });
+  const [overpaymentConfig, setOverpaymentConfig] = useState({ isOpen: false, message: '' });
 
   // 1. Sync is_credit_line
   useEffect(() => {
@@ -57,7 +59,15 @@ function TransactionsView({ transactions, rateSchedule = [], groups = [], reload
       }
   }, [form.type]);
 
-  function checkOverpayment(targetGroup, payAmount) {
+  // Reset selection when leaving selection mode
+  function toggleSelectionMode() {
+    if (isSelectionMode) {
+        setSelectedIds([]);
+    }
+    setIsSelectionMode(!isSelectionMode);
+  }
+
+function checkOverpayment(targetGroup, payAmount) {
       if (form.type === 'Bank' || targetGroup === 'Bank') return true;
 
       const groupTxs = transactions.filter(t => t.group_name === targetGroup);
@@ -69,33 +79,20 @@ function TransactionsView({ transactions, rateSchedule = [], groups = [], reload
       
       const totalOwed = current.principal + current.accruedInterest;
 
+      // Allow a small margin of error (e.g., 1 peso)
       if (payAmount > (totalOwed + 1)) {
           return false;
       }
       return true;
   }
 
-  async function handleSave() {
-    if (!form.amount || Number(form.amount) <= 0) {
-      alert('Please enter a valid amount');
-      return;
-    }
-
-    const actualAmount = Number(form.amount);
-
-    if (form.type === 'Payment') {
-        const isSafe = checkOverpayment(form.group_name, actualAmount);
-        if (!isSafe) {
-            alert(`Overpayment detected! "${form.group_name}" balance is lower than this amount. Use "Bank" type if this is a generic repayment.`);
-            return;
-        }
-    }
-
+  // Helper to execute the actual save
+  async function proceedWithSave() {
     setSaving(true);
 
     const { error } = await supabase.from('transactions').insert({
       ...form,
-      amount: actualAmount,
+      amount: Number(form.amount),
     });
 
     if (error) {
@@ -115,6 +112,29 @@ function TransactionsView({ transactions, rateSchedule = [], groups = [], reload
     
     setSaving(false);
     reload();
+  }
+
+  async function handleSave() {
+    if (!form.amount || Number(form.amount) <= 0) {
+      alert('Please enter a valid amount');
+      return;
+    }
+
+    const actualAmount = Number(form.amount);
+
+    if (form.type === 'Payment') {
+        const isSafe = checkOverpayment(form.group_name, actualAmount);
+        if (!isSafe) {
+            // BLOCKING ERROR: Show modal with Close button only.
+            setOverpaymentConfig({
+                isOpen: true,
+                message: `Overpayment detected! "${form.group_name}" balance is lower than this amount. Please adjust the amount.`
+            });
+            return; // STOP execution
+        }
+    }
+
+    await proceedWithSave();
   }
 
   function confirmDelete(id) {
@@ -139,6 +159,8 @@ function TransactionsView({ transactions, rateSchedule = [], groups = [], reload
       const { error } = await supabase.from('transactions').delete().in('id', selectedIds);
       if (!error) {
         setSelectedIds([]);
+        // Optional: Exit selection mode after delete? 
+        // setIsSelectionMode(false); 
         reload();
       }
     }
@@ -223,7 +245,15 @@ function TransactionsView({ transactions, rateSchedule = [], groups = [], reload
         onConfirm={handleConfirmAction}
         onCancel={() => setConfirmConfig({ ...confirmConfig, isOpen: false })}
       />
-
+    <ConfirmationModal 
+        isOpen={overpaymentConfig.isOpen}
+        title="Overpayment Detected"
+        message={overpaymentConfig.message}
+        isDangerous={true}
+        showConfirm={false}       // Hide Confirm button
+        cancelLabel="Close"       // Rename Cancel to Close
+        onCancel={() => setOverpaymentConfig({ ...overpaymentConfig, isOpen: false })}
+      />
       {isAdmin && (
         <div className='mb-6 p-5 bg-[#F0EFEA] border-2 border-black shadow-sm'>
             <h4 className='font-semibold mb-4 text-gray-900'>Add New Transaction</h4>
@@ -302,19 +332,41 @@ function TransactionsView({ transactions, rateSchedule = [], groups = [], reload
         </div>
       )}
 
-      {/* Table Section (No Changes here) */}
+      {/* Table Section */}
       <div className='bg-[#F0EFEA] border-2 border-black shadow-sm overflow-hidden'>
+        {/* ACTION TOOLBAR (Select/Delete) */}
+        {isAdmin && sortedTxs.length > 0 && (
+            <div className="px-4 py-2 border-b-2 border-black bg-[#F0EFEA] flex justify-between items-center h-12">
+                <button 
+                    onClick={toggleSelectionMode}
+                    className={`px-3 py-1 text-xs font-bold uppercase tracking-wider border-2 border-black transition-all rounded-none ${isSelectionMode ? 'bg-stone-800 text-white' : 'text-stone-800 bg-stone-200 hover:bg-stone-300'}`}
+                >
+                    {isSelectionMode ? 'Cancel Selection' : 'Select'}
+                </button>
+                
+                {isSelectionMode && selectedIds.length > 0 && (
+                    <button
+                        onClick={confirmBulkDelete}
+                        className='px-3 py-1 bg-rose-600 text-white text-xs font-bold uppercase tracking-wider hover:bg-rose-700 border-2 border-black transition-all rounded-none animate-fade-in'
+                    >
+                        Delete ({selectedIds.length})
+                    </button>
+                )}
+            </div>
+        )}
+
         {sortedTxs.length === 0 ? (
             <div className="p-8 text-center text-gray-500 italic">
                 {viewMode === 'bank' ? 'No Credit Line transactions found.' : 'No transactions found.'}
             </div>
         ) : (
             <div className='overflow-x-auto'>
-                <table className='min-w-full border-collapse whitespace-nowrap'>
+                <table className='min-w-fullpK border-collapse whitespace-nowrap'>
                 <thead>
                     <tr className='bg-[#F0EFEA] border-b-2 border-black'>
-                    {isAdmin && (
-                        <th className='p-3 text-center'>
+                    {/* CHECKBOX HEADER: Only if Admin AND Selection Mode */}
+                    {isAdmin && isSelectionMode && (
+                        <th className='p-3 text-center w-12'>
                         {sortedTxs.length > 0 && (
                             <input
                                 type='checkbox'
@@ -348,7 +400,8 @@ function TransactionsView({ transactions, rateSchedule = [], groups = [], reload
 
                     return (
                         <tr key={t.id} className='bg-[#F0EFEA] hover:bg-gray-100 transition-colors' onDoubleClick={() => startEdit(t)}>
-                        {isAdmin && (
+                        {/* CHECKBOX CELL: Only if Admin AND Selection Mode */}
+                        {isAdmin && isSelectionMode && (
                             <td className='p-3 text-center'>
                             <input
                                 type='checkbox'

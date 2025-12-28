@@ -1,10 +1,18 @@
 import React from 'react';
-import { createPortal } from 'react-dom'; // 1. Import createPortal
+import { createPortal } from 'react-dom';
 
-function ConfirmationModal({ isOpen, title, message, onConfirm, onCancel, isDangerous = false }) {
+function ConfirmationModal({ 
+  isOpen, 
+  title, 
+  message, 
+  onConfirm, 
+  onCancel, 
+  isDangerous = false, 
+  showConfirm = true,       // NEW: Default to showing the confirm button
+  cancelLabel = 'Cancel'    // NEW: Default label is Cancel
+}) {
   if (!isOpen) return null;
 
-  // 2. Wrap the JSX in createPortal(..., document.body)
   return createPortal(
     <div className='fixed inset-0 z-[150] bg-stone-900/60 backdrop-blur-sm flex items-center justify-center p-4 animate-fade-in'>
       <div className='bg-[#F0EFEA] w-full max-w-sm border-2 border-black transform transition-all scale-100'>
@@ -22,22 +30,25 @@ function ConfirmationModal({ isOpen, title, message, onConfirm, onCancel, isDang
             onClick={onCancel}
             className='px-4 py-2 text-stone-900 bg-white border-2 border-black hover:bg-gray-100 font-bold uppercase text-xs tracking-wider transition-colors rounded-none'
           >
-            Cancel
+            {cancelLabel}
           </button>
-          <button
-            onClick={onConfirm}
-            className={`px-4 py-2 text-white font-bold uppercase text-xs tracking-wider border-2 border-black transition-all rounded-none ${
-              isDangerous 
-                ? 'bg-rose-600 hover:bg-rose-700' 
-                : 'bg-indigo-600 hover:bg-indigo-700'
-            }`}
-          >
-            Confirm
-          </button>
+          
+          {showConfirm && (
+            <button
+              onClick={onConfirm}
+              className={`px-4 py-2 text-white font-bold uppercase text-xs tracking-wider border-2 border-black transition-all rounded-none ${
+                isDangerous 
+                  ? 'bg-rose-600 hover:bg-rose-700' 
+                  : 'bg-indigo-600 hover:bg-indigo-700'
+              }`}
+            >
+              Confirm
+            </button>
+          )}
         </div>
       </div>
     </div>,
-    document.body // Target destination
+    document.body
   );
 }
 

@@ -19,6 +19,9 @@ function TsikotView({ tsikots, reload, supabase, formatDate, isBefore }) {
   const [selectedIds, setSelectedIds] = useState([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [initialEditData, setInitialEditData] = useState(null);
+  
+  // NEW: Selection Mode State
+  const [isSelectionMode, setIsSelectionMode] = useState(false);
 
   // Confirmation State
   const [confirmConfig, setConfirmConfig] = useState({ isOpen: false, type: null, id: null });
@@ -80,6 +83,7 @@ function TsikotView({ tsikots, reload, supabase, formatDate, isBefore }) {
       const { error } = await supabase.from('tsikot').delete().in('id', selectedIds);
       if (!error) {
         setSelectedIds([]);
+        // Optional: setIsSelectionMode(false);
         reload();
       }
     }
@@ -87,6 +91,13 @@ function TsikotView({ tsikots, reload, supabase, formatDate, isBefore }) {
 
   function toggleSelect(id) {
     setSelectedIds(prev => (prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]));
+  }
+  
+  function toggleSelectionMode() {
+      if (isSelectionMode) {
+          setSelectedIds([]);
+      }
+      setIsSelectionMode(!isSelectionMode);
   }
 
   function handleNewMiscAdd() {
@@ -163,18 +174,8 @@ function TsikotView({ tsikots, reload, supabase, formatDate, isBefore }) {
         onConfirm={handleConfirmAction}
         onCancel={() => setConfirmConfig({ ...confirmConfig, isOpen: false })}
       />
-
-      {isAdmin && selectedIds.length > 0 && (
-        <div className='mb-4 flex items-center gap-3 bg-rose-50 p-3 border-2 border-rose-200'>
-          <div className='text-sm text-rose-700'>{selectedIds.length} selected</div>
-          <button
-            onClick={confirmBulkDelete}
-            className='px-3 py-1 bg-rose-600 text-white text-sm hover:bg-rose-700 transition-colors rounded-none'
-          >
-            Delete Selected
-          </button>
-        </div>
-      )}
+      
+      {/* REMOVED OLD BULK DELETE BUTTON BLOCK FROM HERE */}
 
       {isAdmin && (
         <div className='mb-6 p-5 bg-[#F0EFEA] shadow-sm border-2 border-black'>
@@ -334,12 +335,33 @@ function TsikotView({ tsikots, reload, supabase, formatDate, isBefore }) {
 
       {sortedTsikots.length > 0 && (
         <div className='bg-[#F0EFEA] shadow-sm border-2 border-black overflow-hidden'>
+            {/* ACTION TOOLBAR */}
+            {isAdmin && (
+                <div className="px-4 py-2 border-b-2 border-black bg-[#F0EFEA] flex justify-between items-center h-12">
+                    <button 
+                        onClick={toggleSelectionMode}
+                        className={`px-3 py-1 text-xs font-bold uppercase tracking-wider border-2 border-black transition-all rounded-none ${isSelectionMode ? 'bg-stone-800 text-white' : 'text-stone-800 bg-stone-200 hover:bg-stone-300'}`}
+                    >
+                        {isSelectionMode ? 'Cancel Selection' : 'Select'}
+                    </button>
+                    
+                    {isSelectionMode && selectedIds.length > 0 && (
+                        <button
+                            onClick={confirmBulkDelete}
+                            className='px-3 py-1 bg-rose-600 text-white text-xs font-bold uppercase tracking-wider hover:bg-rose-700 border-2 border-black transition-all rounded-none animate-fade-in'
+                        >
+                            Delete ({selectedIds.length})
+                        </button>
+                    )}
+                </div>
+            )}
+
           <div className='overflow-x-auto'>
             <table className='min-w-full border-collapse whitespace-nowrap'>
               <thead>
                 <tr className='bg-[#F0EFEA] border-b-2 border-black'>
-                  {isAdmin && (
-                      <th className='p-3 text-center'>
+                  {isAdmin && isSelectionMode && (
+                      <th className='p-3 text-center w-12'>
                       {sortedTsikots.length > 0 && (
                           <input
                               type='checkbox'
@@ -367,7 +389,7 @@ function TsikotView({ tsikots, reload, supabase, formatDate, isBefore }) {
                   const totalMisc = calculateMiscTotal(t.miscellaneous || []);
                   return (
                     <tr key={t.id} className='hover:bg-gray-100 transition-colors cursor-pointer' onDoubleClick={() => startEdit(t)}>
-                      {isAdmin && (
+                      {isAdmin && isSelectionMode && (
                           <td className='p-3 text-center'>
                           <input
                               type='checkbox'
