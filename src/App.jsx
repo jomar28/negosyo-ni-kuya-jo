@@ -36,10 +36,31 @@ function MainLayout() {
   const [swiperInstance, setSwiperInstance] = useState(null);
 
   async function loadData() {
-    const txReq = supabase.from('transactions').select('*');
-    const carReq = supabase.from('tsikot').select('*');
-    const rateReq = supabase.from('rate_changes').select('*');
-    const groupReq = supabase.from('groups').select('*');
+    // UPDATED: Added sorting logic here
+    // Transactions: Date DESC, then Created At DESC (Fixes same-day ordering)
+    const txReq = supabase
+      .from('transactions')
+      .select('*')
+      .order('date', { ascending: false })
+      .order('created_at', { ascending: false });
+
+    // Tsikot: Date Bought DESC
+    const carReq = supabase
+      .from('tsikot')
+      .select('*')
+      .order('date_bought', { ascending: false });
+
+    // Rates: Effective Date DESC
+    const rateReq = supabase
+      .from('rate_changes')
+      .select('*')
+      .order('effective_date', { ascending: false });
+
+    // Groups: Name ASC
+    const groupReq = supabase
+      .from('groups')
+      .select('*')
+      .order('name', { ascending: true });
 
     const [txRes, carRes, rateRes, groupRes] = await Promise.all([txReq, carReq, rateReq, groupReq]);
 

@@ -13,6 +13,9 @@ function TsikotStats({ stats }) {
   const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
   const YearBreakdown = ({ title, totalValue, yearData, dataKey, isCurrency = true, isProfit = false }) => {
+    // HIDE CARD IF VALUE IS ZERO
+    if (Math.abs(totalValue) < 0.01) return null;
+
     const isOpen = openYears[title + dataKey];
     
     // Toggle Logic
@@ -25,8 +28,6 @@ function TsikotStats({ stats }) {
       : 'text-gray-900';
 
     return (
-      // 1. Add onClick to container
-      // 2. Add cursor-pointer
       <div 
         onClick={handleToggle}
         className='p-5 bg-[#F0EFEA] border-2 border-black relative pb-12 transition-all duration-300 cursor-pointer'
@@ -62,7 +63,7 @@ function TsikotStats({ stats }) {
                   countLabel = 'sold';
               }
 
-              if (count === 0 && yearValue === 0) return null;
+              if (count === 0 && Math.abs(yearValue) < 0.01) return null;
 
               return (
                 <div key={year}>
@@ -74,7 +75,7 @@ function TsikotStats({ stats }) {
                     </span>
                   </div>
                   {data.byMonth.map((monthData, monthIndex) => {
-                    if (monthData[dataKey] === 0) return null;
+                    if (Math.abs(monthData[dataKey]) < 0.01) return null;
                     const monthValue = monthData[dataKey];
                     return (
                       <div key={monthIndex} className='flex justify-between text-sm pl-4 py-0.5'>
@@ -92,7 +93,6 @@ function TsikotStats({ stats }) {
         )}
 
         <div className='absolute bottom-0 left-1/2 transform -translate-x-1/2 translate-y-1/2'>
-          {/* 3. Remove specific onClick to allow bubble-up */}
           <button
             className={`p-1.5 bg-[#F0EFEA] border-2 border-black rounded-full text-gray-900 transition-all duration-300 ${isOpen ? 'rotate-180' : 'rotate-0'}`}
             aria-expanded={isOpen}

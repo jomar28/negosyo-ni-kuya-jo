@@ -1,10 +1,10 @@
 // src/utils/interest.js
 
-// ----- Date utilities (Unchanged) -----
+// ----- Date utilities -----
 export function formatDate(date, format = 'YYYY-MM-DD') {
   if (!date) return null;
   const d = new Date(date);
-  if (isNaN(d.getTime())) return null; // Invalid date check
+  if (isNaN(d.getTime())) return null; 
   
   const year = d.getFullYear();
   const month = String(d.getMonth() + 1).padStart(2, '0');
@@ -20,8 +20,6 @@ export function formatDate(date, format = 'YYYY-MM-DD') {
 
 export function addDays(date, days) {
   const d = new Date(date);
-  // 🛑 REMOVED Timezone adjustment. This should only be done at loop initialization.
-  // d.setTime(d.getTime() + d.getTimezoneOffset() * 60 * 1000);
   d.setDate(d.getDate() + days);
   return d;
 }
@@ -58,31 +56,25 @@ export function diffInDays(date1, date2) {
   return Math.round(diff / (1000 * 60 * 60 * 24));
 }
 
-// ----- Interest utilities (Completely Rewritten) -----
+// ----- Interest utilities -----
 
-/**
- * Gets the date of the very first transaction for a group.
- * This is the required start date for the master ledger.
- */
-export function getEarliestTransactionDate(transactions, groupName) {
-  const firstTx = transactions
-    .filter(t => t.group_name === groupName)
+export function getEarliestTransactionDate(transactions, groupName = null) {
+  const relevantTxs = groupName 
+    ? transactions.filter(t => t.group_name === groupName)
+    : transactions;
+
+  if (relevantTxs.length === 0) {
+      return formatDate(new Date()); 
+  }
+
+  const firstTx = relevantTxs
     .sort((a, b) => new Date(a.date) - new Date(b.date))[0];
 
-  if (!firstTx) {
-    return formatDate(new Date()); // Fallback to today if no txs
-  }
   return firstTx.date;
 }
 
-/**
- * Calculates the next billing date (5th of the month).
- */
 export function getNextBillingDate(fromDate = null) {
   const ref = fromDate ? new Date(fromDate) : new Date();
-  // 🛑 REMOVED Timezone adjustment. This should only be done at loop initialization.
-  // ref.setTime(ref.getTime() + ref.getTimezoneOffset() * 60 * 1000);
-  
   const currentDay = ref.getDate();
 
   if (currentDay <= 5) {
@@ -96,13 +88,14 @@ export function getNextBillingDate(fromDate = null) {
 }
 
 /**
- * ✅ NEW: The "Single Source of Truth"
- * Generates a day-by-day ledger of balances and interest,
- * correctly applying payments based on bank's priority rules.
+ * Generates a day-by-day ledger of balances and interest.
+ * STRICTLY uses rateSchedule. No Multipliers.
  */
-export function generateMasterLedger(transactions, groupName, fromDate, toDate, rateSchedule = [], groupsList = []) {
+export function generateMasterLedger(transactions, groupName, fromDate, toDate, rateSchedule = []) {
+  const skipGroupFilter = groupName === null;
+
   const txs = transactions
-    .filter(t => t.group_name === groupName)
+    .filter(t => skipGroupFilter ? true : t.group_name === groupName)
     .map(t => ({ ...t, date: formatDate(t.date) }))
     .sort((a, b) => new Date(a.date) - new Date(b.date));
 
@@ -120,21 +113,13 @@ export function generateMasterLedger(transactions, groupName, fromDate, toDate, 
   while (cursor <= endDate) {
     const cursorStr = formatDate(cursor);
     
-    // 1. RATE LOOKUP
+    // 1. RATE LOOKUP (From Rates Section)
     const activeRateConfig = rateSchedule
         .filter(r => r.effective_date <= cursorStr)
         .sort((a, b) => new Date(b.effective_date) - new Date(a.effective_date))[0];
 
+    // Default to 14% if no rate found, otherwise use strict annual rate
     let currentAnnualRate = activeRateConfig ? Number(activeRateConfig.annual_rate) : 0.14;
-
-    // --- NEW LOGIC: MULTIPLIER LOOKUP ---
-    // Find the group config. Default to 1.0 (Full Interest) if not found.
-    const groupConfig = groupsList.find(g => g.name === groupName);
-    const multiplier = groupConfig ? Number(groupConfig.interest_multiplier) : 1.0;
-
-    // Apply multiplier (e.g., 14% * 0.5 = 7%)
-    currentAnnualRate = currentAnnualRate * multiplier;
-    // ------------------------------------
 
     const dailyRate = currentAnnualRate / 360;
 
@@ -153,7 +138,7 @@ export function generateMasterLedger(transactions, groupName, fromDate, toDate, 
         principal += Number(tx.amount);
       }
       
-      if (tx.type === 'Payment') {
+      if (tx.type === 'Payment' || tx.type === 'Bank') {
         let paymentAmount = Number(tx.amount);
 
         const paidToInterest = Math.min(paymentAmount, accruedInterest);
@@ -182,9 +167,6 @@ export function generateMasterLedger(transactions, groupName, fromDate, toDate, 
   return ledger;
 }
 
-/**
- * ✅ NEW: Reads the master ledger to get current balances.
- */
 export function calculateCurrentBalances(ledger, earliestTxDate) {
   if (ledger.length === 0) {
     return {
@@ -197,34 +179,27 @@ export function calculateCurrentBalances(ledger, earliestTxDate) {
   
   const lastEntry = ledger[ledger.length - 1];
 
-  // Find the start of the current unbilled period
-  // (the day *after* interest was last at 0)
   let accrualStartDate = earliestTxDate;
   let days = 0;
   
   for (let i = ledger.length - 1; i >= 0; i--) {
     days++;
     if (ledger[i].accruedInterest === 0 && ledger[i].interestPaid === 0) {
-      // If we are on the day it hit zero, the start date is the *next* day
       if (i + 1 < ledger.length) {
         accrualStartDate = ledger[i + 1].date;
         days = diffInDays(ledger[i + 1].date, ledger[ledger.length - 1].date) + 1;
       } else {
-        // This was the last day, so nothing has accrued
         accrualStartDate = ledger[i].date;
         days = 0;
       }
       break;
     }
-    // If we reach the beginning without finding a zero, the start date is the first date
     if (i === 0) {
       accrualStartDate = ledger[0].date;
       days = ledger.length;
     }
   }
 
-
-  // ✅ Round ONLY at the very end, before returning.
   return {
     principal: Number(lastEntry.principal.toFixed(2)),
     accruedInterest: Number(lastEntry.accruedInterest.toFixed(2)),
@@ -233,18 +208,13 @@ export function calculateCurrentBalances(ledger, earliestTxDate) {
   };
 }
 
-/**
- * ✅ NEW: Reads the master ledger to group interest by billing cycles.
- */
 export function groupInterestByBilling(ledger, fromDate, toDate, billingDay = 5) {
   if (ledger.length === 0) return [];
 
   const grouped = {};
   
-  // 1. Find all billing dates in the range
   let billingDates = {};
   let cursor = new Date(fromDate);
-  // ✅ This is the ONLY place we should adjust for timezone, at the start of the loop.
   cursor.setTime(cursor.getTime() + cursor.getTimezoneOffset() * 60 * 1000);
   const endDate = new Date(toDate);
 
@@ -252,20 +222,15 @@ export function groupInterestByBilling(ledger, fromDate, toDate, billingDay = 5)
   
   while (new Date(currentBillingDate) <= endDate) {
     billingDates[currentBillingDate] = { accrued: 0, paid: 0 };
-    // Get the *next* billing date
     let nextDay = addDays(currentBillingDate, 1);
     currentBillingDate = getNextBillingDate(nextDay);
   }
-  // Add one more for the current partial period
   billingDates[currentBillingDate] = { accrued: 0, paid: 0 };
 
-  // 2. Sum daily interest and payments into their correct billing cycle
   ledger.forEach(day => {
     const dayDate = new Date(day.date);
-    // ✅ This is the ONLY place we should adjust for timezone, at the start of the loop.
     dayDate.setTime(dayDate.getTime() + dayDate.getTimezoneOffset() * 60 * 1000);
     
-    // Find which billing date this day belongs to
     const billingDateKey = getNextBillingDate(day.date);
     
     if (billingDates[billingDateKey]) {
@@ -274,16 +239,11 @@ export function groupInterestByBilling(ledger, fromDate, toDate, billingDay = 5)
     }
   });
   
-  // 3. Calculate "due" amount (what's left)
   return Object.entries(billingDates)
     .map(([billingDate, data]) => ({
       billingDate,
-      // ✅ Round ONLY at the very end, before returning.
       interestAccrued: Number(data.accrued.toFixed(2)),
       interestPaid: Number(data.paid.toFixed(2)),
-      // Interest Due is what accrued in that period, *minus* what was paid in that period.
-      // We use Math.max to prevent negative balances from "rolling over" visually.
-      // The main `accruedInterest` balance in the ledger handles the *actual* rollover.
       interestDue: Number(Math.max(0, data.accrued - data.paid).toFixed(2))
     }))
     .sort((a, b) => new Date(a.billingDate) - new Date(b.billingDate));
